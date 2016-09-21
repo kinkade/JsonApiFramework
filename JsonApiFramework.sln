@@ -3,8 +3,27 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
 VisualStudioVersion = 12.0.40629.0
 MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Source", "Source", "{71569D79-3DA6-4FA0-B270-5AF3A54FE4B7}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{F9EA7EE7-D0E6-4788-A2BA-3E21CA32F56A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JsonApiFramework.Core", "Source\JsonApiFramework.Core\JsonApiFramework.Core.csproj", "{CECDCC33-48EB-4C68-853A-784433BC46F6}"
+EndProject
 Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{CECDCC33-48EB-4C68-853A-784433BC46F6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CECDCC33-48EB-4C68-853A-784433BC46F6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CECDCC33-48EB-4C68-853A-784433BC46F6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CECDCC33-48EB-4C68-853A-784433BC46F6}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{CECDCC33-48EB-4C68-853A-784433BC46F6} = {71569D79-3DA6-4FA0-B270-5AF3A54FE4B7}
 	EndGlobalSection
 EndGlobal
