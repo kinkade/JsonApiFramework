@@ -35,6 +35,12 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Clock\SystemClock.cs" />
+    <Compile Include="Extensions\ClockExtensions.cs" />
+    <Compile Include="Extensions\DeepCloneableExtensions.cs" />
+    <Compile Include="Extensions\EnumerableExtensions.cs" />
+    <Compile Include="Extensions\ObjectExtensions.cs" />
+    <Compile Include="Extensions\StringExtensions.cs" />
+    <Compile Include="Extensions\UriExtensions.cs" />
     <Compile Include="IClock.cs" />
     <Compile Include="IDeepCloneable.cs" />
     <Compile Include="IResource.cs" />
