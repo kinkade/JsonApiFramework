@@ -5,6 +5,10 @@ using System;
 
 namespace JsonApiFramework.Converters
 {
+    /// <summary>
+    /// Abstracts a non-generic type converter definition that allows easy
+    /// access to the combination of source to target types it can convert.
+    /// </summary>
     public interface ITypeConverterDefinition
     {
         // PUBLIC PROPERTIES ////////////////////////////////////////////////
@@ -14,11 +18,15 @@ namespace JsonApiFramework.Converters
         #endregion
     }
 
+    /// <summary>
+    /// Abstracts a generic type converter definition for a specific
+    /// combination of source to target types.
+    /// </summary>
     public interface ITypeConverterDefinition<in TSource, TTarget> : ITypeConverterDefinition
     {
         // PUBLIC METHODS ///////////////////////////////////////////////////
         #region Methods
-        bool TryConvert(TSource source, IFormatProvider formatProvider, out TTarget target);
+        bool TryConvert(TSource source, string format, IFormatProvider formatProvider, out TTarget target);
         #endregion
     }
 }

@@ -6,11 +6,15 @@ using System.Diagnostics.Contracts;
 
 namespace JsonApiFramework.Converters
 {
+    /// <summary>
+    /// Implementation of <c>ITypeConverterDefinition</c> that accepts a
+    /// function object as the actual convert implementation.
+    /// </summary>
     public class TypeConverterDefinitionFunc<TSource, TTarget> : ITypeConverterDefinition<TSource, TTarget>
     {
         // PUBLIC CONSTRUCTORS //////////////////////////////////////////////
         #region Constructors
-        public TypeConverterDefinitionFunc(Func<TSource, IFormatProvider, TTarget> converter)
+        public TypeConverterDefinitionFunc(Func<TSource, string, IFormatProvider, TTarget> converter)
         {
             Contract.Requires(converter != null);
 
@@ -26,16 +30,16 @@ namespace JsonApiFramework.Converters
 
         // PUBLIC METHODS ///////////////////////////////////////////////////
         #region ITypeConverterDefinition<TSource, TTarget> Implementation
-        public bool TryConvert(TSource source, IFormatProvider formatProvider, out TTarget target)
+        public bool TryConvert(TSource source, string format, IFormatProvider formatProvider, out TTarget target)
         {
-            target = this.Converter(source, formatProvider);
+            target = this.Converter(source, format, formatProvider);
             return true;
         }
         #endregion
 
         // PRIVATE PROPERTIES ///////////////////////////////////////////////
         #region Properties
-        private Func<TSource, IFormatProvider, TTarget> Converter { get; set; }
+        private Func<TSource, string, IFormatProvider, TTarget> Converter { get; set; }
         #endregion
     }
 }
