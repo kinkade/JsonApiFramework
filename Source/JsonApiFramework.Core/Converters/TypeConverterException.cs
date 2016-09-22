@@ -3,11 +3,11 @@
 
 using System;
 
-namespace JsonApiFramework.Reflection
+namespace JsonApiFramework.Converters
 {
     /// <summary>
-    /// Represents an exception that is thrown from the <c>TypeConverter</c>
-    /// class if unable to convert types.
+    /// Represents an exception that is thrown when this component is unable
+    /// to convert between types.
     /// </summary>
     public class TypeConverterException : Exception
     {

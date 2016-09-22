@@ -6,13 +6,14 @@ using System.Collections.Generic;
 
 using FluentAssertions;
 
+using JsonApiFramework.Converters;
 using JsonApiFramework.Reflection;
 using JsonApiFramework.XUnit;
 
 using Xunit;
 using Xunit.Abstractions;
 
-namespace JsonApiFramework.Tests.Reflection
+namespace JsonApiFramework.Tests.Converters
 {
     public class TypeConverterTests : XUnitTest
     {
@@ -33,9 +34,9 @@ namespace JsonApiFramework.Tests.Reflection
             {
                 unitTest.Execute(this);
 
-                this.Output.WriteLine(String.Empty);
-                this.Output.WriteLine("-----------------------------------------------------------------------------");
-                this.Output.WriteLine(String.Empty);
+                this.WriteLine();
+                this.WriteDashedLine();
+                this.WriteLine();
             }
         }
         #endregion
@@ -64,7 +65,7 @@ namespace JsonApiFramework.Tests.Reflection
                             new TryConvertTest<bool, long>("BoolToLong", true, ConvertResult.Success, 1),
                             new TryConvertTest<bool, sbyte>("BoolToSByte", true, ConvertResult.Success, 1),
                             new TryConvertTest<bool, short>("BoolToShort", true, ConvertResult.Success, 1),
-                            //new TryConvertTest<bool, string>("BoolToString", true, ConvertResult.Success, "True"),
+                            new TryConvertTest<bool, string>("BoolToString", true, ConvertResult.Success, "True"),
                             new TryConvertTest<bool, TimeSpan>("BoolToTimeSpan", true, ConvertResult.Failure, default(TimeSpan)),
                             new TryConvertTest<bool, Type>("BoolToType", true, ConvertResult.Failure, default(Type)),
                             new TryConvertTest<bool, uint>("BoolToUInt", true, ConvertResult.Success, 1),
@@ -178,6 +179,8 @@ namespace JsonApiFramework.Tests.Reflection
             #region UnitTest Overrides
             protected override void Arrange()
             {
+                this.TypeConverter = new TypeConverter();
+
                 this.WriteLine("Source:    {0} ({1})", this.Source, typeof(TSource).Name);
                 this.WriteLine();
 
@@ -191,7 +194,7 @@ namespace JsonApiFramework.Tests.Reflection
             {
                 var source = this.Source;
                 TTarget actualValue;
-                var actualResult = TypeConverter2.TryConvert(source, out actualValue);
+                var actualResult = this.TypeConverter.TryConvert(source, out actualValue);
 
                 this.ActualResult = actualResult ? ConvertResult.Success : ConvertResult.Failure;
                 this.ActualValue = actualValue;
@@ -236,6 +239,7 @@ namespace JsonApiFramework.Tests.Reflection
 
             // PRIVATE PROPERTIES ///////////////////////////////////////////
             #region Calculated Properties
+            private ITypeConverter TypeConverter { get; set; }
             private ConvertResult ActualResult { get; set; }
             private TTarget ActualValue { get; set; }
             #endregion

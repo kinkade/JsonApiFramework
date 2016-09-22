@@ -14,19 +14,16 @@ namespace JsonApiFramework.XUnit
         // PUBLIC METHODS ///////////////////////////////////////////////////
         #region Write Methods
         public void WriteLine()
-        {
-            this.Output.WriteLine(String.Empty);
-        }
+        { this.Output.WriteLine(String.Empty); }
 
         public void WriteLine(string message)
-        {
-            this.Output.WriteLine(message);
-        }
+        { this.Output.WriteLine(message); }
 
         public void WriteLine(string format, params object[] args)
-        {
-            this.Output.WriteLine(format, args);
-        }
+        { this.Output.WriteLine(format, args); }
+
+        public void WriteDashedLine()
+        { this.Output.WriteLine(SingleDashedLine); }
         #endregion
 
         // PROTECTED CONSTRUCTORS ///////////////////////////////////////////
@@ -42,6 +39,15 @@ namespace JsonApiFramework.XUnit
         // PRIVATE PROPERTIES ///////////////////////////////////////////////
         #region Properties
         public ITestOutputHelper Output { get; private set; }
+        #endregion
+
+        // PRIVATE FIELDS ///////////////////////////////////////////////////
+        #region Fields
+        private const string DoubleDashedLine =
+            "=============================================================================";
+
+        private const string SingleDashedLine =
+            "-----------------------------------------------------------------------------";
         #endregion
     }
 }

@@ -18,12 +18,17 @@ namespace JsonApiFramework.XUnit
             this.XUnitTest = xUnitTest;
 
             this.WriteLine("Test Name: {0}", this.Name);
-            this.WriteLine(String.Empty);
+            this.WriteLine();
 
             this.Arrange();
             this.Act();
             this.Assert();
         }
+        #endregion
+
+        #region Object Overrides
+        public override string ToString()
+        { return this.Name; }
         #endregion
 
         // PROTECTED CONSTRUCTORS ///////////////////////////////////////
@@ -55,20 +60,16 @@ namespace JsonApiFramework.XUnit
 
         #region Write Methods
         protected void WriteLine()
-        {
-            this.XUnitTest.WriteLine(String.Empty);
-        }
+        { this.XUnitTest.WriteLine(); }
 
         protected void WriteLine(string message)
-        {
-            this.XUnitTest.WriteLine(message);
-        }
+        { this.XUnitTest.WriteLine(message); }
 
         protected void WriteLine(string format, params object[] args)
-        {
-            this.XUnitTest.WriteLine(format, args);
-        }
-        #endregion
+        { this.XUnitTest.WriteLine(format, args); }
 
+        protected void WriteDashedLine()
+        { this.XUnitTest.WriteDashedLine(); }
+        #endregion
     }
 }

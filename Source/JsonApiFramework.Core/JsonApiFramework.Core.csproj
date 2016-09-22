@@ -41,6 +41,10 @@
     <Compile Include="Extensions\ObjectExtensions.cs" />
     <Compile Include="Extensions\StringExtensions.cs" />
     <Compile Include="Extensions\UriExtensions.cs" />
+    <Compile Include="Converters\ITypeConverterDefinition.cs" />
+    <Compile Include="Converters\TypeConverterDefinitionFunc.cs" />
+    <Compile Include="Converters\TypeConverterExtensions.cs" />
+    <Compile Include="Converters\ITypeConverter.cs" />
     <Compile Include="IClock.cs" />
     <Compile Include="IDeepCloneable.cs" />
     <Compile Include="IResource.cs" />
@@ -48,10 +52,9 @@
     <Compile Include="Reflection\BindingFlags.cs" />
     <Compile Include="Reflection\ObjectFactory.cs" />
     <Compile Include="Reflection\StaticReflection.cs" />
-    <Compile Include="Reflection\TypeConverter2.cs" />
-    <Compile Include="Reflection\TypeConverter.cs" />
-    <Compile Include="Reflection\TypeConverterException.cs" />
+    <Compile Include="Converters\TypeConverterException.cs" />
     <Compile Include="Reflection\TypeExtensions.cs" />
+    <Compile Include="Converters\TypeConverter.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Newtonsoft.Json, Version=9.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
