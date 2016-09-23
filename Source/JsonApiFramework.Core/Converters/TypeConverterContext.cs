@@ -14,17 +14,17 @@ namespace JsonApiFramework.Converters
         // PUBLIC PROPERTIES ////////////////////////////////////////////////
         #region Properties
         /// <summary>
-        /// Format string to use when converting from string to other types.
+        /// Optional format string to use when converting from string to other types.
         /// </summary>
         public string Format { get; set; }
 
         /// <summary>
-        /// Format provider to use when converting from string to other types.
+        /// Optional format provider to use when converting from string to other types.
         /// </summary>
         public IFormatProvider FormatProvider { get; set; }
 
         /// <summary>
-        /// DateTimeStyles to use when converting from string to DateTime or DateTimeOffset.
+        /// Optional DateTimeStyles to use when converting from string to DateTime or DateTimeOffset.
         /// </summary>
         public DateTimeStyles DateTimeStyles { get; set; }
         #endregion

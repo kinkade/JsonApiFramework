@@ -7,7 +7,6 @@ using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Linq.Expressions;
 
-using JsonApiFramework.Expressions;
 using JsonApiFramework.Reflection;
 
 namespace JsonApiFramework.Converters
@@ -125,26 +124,7 @@ namespace JsonApiFramework.Converters
             if (typeof(TSource).IsString())
             {
                 var sourceAsString = CastTo<string>.From(source);
-                return Enum<TTarget>.TryParse(sourceAsString, out target);
-
-
-
-
-                //var enumType = typeof(Enum);
-                //var tryParseMethodInfoOpen = enumType.GetMethods().FirstOrDefault(x => x.Name == "TryParse");
-                //var tryParseMethodInfoClosed = tryParseMethodInfoOpen.MakeGenericMethod(targetType);
-                //var arguments = tryParseMethodInfoClosed.GetParameters();
-
-                //var argument1Type = arguments[0].ParameterType;
-                //var argument2Type = arguments[1].ParameterType;
-
-                //var argument1Expression = Expression.Parameter(argument1Type, "source");
-                //var argument2Expression = Expression.Parameter(argument2Type, "target");
-                //var callExpression = Expression.Call(tryParseMethodInfoClosed, argument1Expression, argument2Expression);
-                //var callLambdaExpression = Expression.Lambda<EnumTryParseDelegate<TTarget>>(callExpression, argument1Expression, argument2Expression);
-                //var callLambda = callLambdaExpression.Compile();
-                //var tryParseResult = callLambda(sourceAsString, out target);
-                //return tryParseResult;
+                return EnumTryParse<TTarget>.From(sourceAsString, out target);
             }
 
             return false;
@@ -293,40 +273,30 @@ namespace JsonApiFramework.Converters
                 new TypeConverterDefinitionFunc<string, ushort>((s, c) => Convert.ToUInt16(s, c.SafeGetFormatProvider())),
                 new TypeConverterDefinitionFunc<string, ushort?>((s, c) => !String.IsNullOrWhiteSpace(s) ? Convert.ToUInt16(s, c.SafeGetFormatProvider()) : new ushort?()),
             };
-
-
-                            //new TryConvertGenericTest<string, PrimaryColor?>("StringToNullable<Enum>", "42", ConvertResult.Success, (PrimaryColor)42),
-                            //new TryConvertGenericTest<string, Guid?>("StringToNullable<Guid>", "42", ConvertResult.Failure, default(Guid?)),
-                            //new TryConvertGenericTest<string, TimeSpan?>("StringToNullable<TimeSpan>", "42", ConvertResult.Failure, default(TimeSpan?)),
-
         #endregion
 
         // PRIVATE TYPES ////////////////////////////////////////////////////
         #region Types
         /// <summary>
-        /// Slick class that uses dynamically built cached lamdas to cast
-        /// between types.
+        /// Returns dynamically built lamdas (cached) to cast between types.
         /// </summary>
         /// <notes>
-        /// Avoids unecessary boxing/unboxing between value types.
+        /// Avoids unecessary boxing/unboxing for value types.
         /// </notes>
-        /// <seealso cref="http://stackoverflow.com/questions/1189144/c-sharp-non-boxing-conversion-of-generic-enum-to-int"/>
         private static class CastTo<TTarget>
         {
             // PUBLIC METHODS ///////////////////////////////////////////////
             #region Methods
-            // ReSharper disable UnusedMember.Local
             public static TTarget From<TSource>(TSource source)
             {
-                return Cache<TSource>.Caster(source);
+                return Cache<TSource>.CastImpl(source);
             }
-            // ReSharper restore UnusedMember.Local
 
             public static bool TryFrom<TSource>(TSource source, out TTarget target)
             {
                 try
                 {
-                    target = Cache<TSource>.Caster(source);
+                    target = Cache<TSource>.CastImpl(source);
                     return true;
                 }
                 catch (Exception)
@@ -342,11 +312,11 @@ namespace JsonApiFramework.Converters
             private static class Cache<TSource>
             {
                 #region Public Fields
-                public static readonly Func<TSource, TTarget> Caster = CreateCaster();
+                public static readonly Func<TSource, TTarget> CastImpl = CreateCastImpl();
                 #endregion
 
                 #region Private Methods
-                private static Func<TSource, TTarget> CreateCaster()
+                private static Func<TSource, TTarget> CreateCastImpl()
                 {
                     var parameterExpression = Expression.Parameter(typeof(TSource));
                     var convertExpression = Expression.ConvertChecked(parameterExpression, typeof(TTarget));
@@ -362,15 +332,15 @@ namespace JsonApiFramework.Converters
 
         private delegate bool EnumTryParseDelegate<TTarget>(string source, out TTarget target);
 
-        private static class Enum<TTarget>
+        private static class EnumTryParse<TTarget>
         {
             // PUBLIC METHODS ///////////////////////////////////////////////
             #region Methods
-            public static bool TryParse(string source, out TTarget target)
+            public static bool From(string source, out TTarget target)
             {
                 try
                 {
-                    return Cache.EnumTryParser(source, out target);
+                    return EnumTryParseImpl(source, out target);
                 }
                 catch (Exception)
                 {
@@ -380,29 +350,29 @@ namespace JsonApiFramework.Converters
             }
             #endregion
 
+            #region Private Fields
+            private static readonly EnumTryParseDelegate<TTarget> EnumTryParseImpl = Cache.CreateEnumTryParseImpl();
+            #endregion
+
             // PRIVATE TYPES ////////////////////////////////////////////////////
             #region Types
             private static class Cache
             {
-                #region Public Fields
-                public static readonly EnumTryParseDelegate<TTarget> EnumTryParser = CreateEnumTryParser();
-                #endregion
-
                 #region Private Methods
-                private static EnumTryParseDelegate<TTarget> CreateEnumTryParser()
+                public static EnumTryParseDelegate<TTarget> CreateEnumTryParseImpl()
                 {
                     var enumType = typeof(Enum);
                     var tryParseMethodInfoOpen = enumType.GetMethods().FirstOrDefault(x => x.Name == "TryParse");
                     var tryParseMethodInfoClosed = tryParseMethodInfoOpen.MakeGenericMethod(typeof(TTarget));
                     var arguments = tryParseMethodInfoClosed.GetParameters();
 
-                    var argument1Type = arguments[0].ParameterType;
-                    var argument2Type = arguments[1].ParameterType;
+                    var sourceType = arguments[0].ParameterType;
+                    var targetType = arguments[1].ParameterType;
 
-                    var argument1Expression = Expression.Parameter(argument1Type, "source");
-                    var argument2Expression = Expression.Parameter(argument2Type, "target");
-                    var callExpression = Expression.Call(tryParseMethodInfoClosed, argument1Expression, argument2Expression);
-                    var callDelegateExpression = Expression.Lambda<EnumTryParseDelegate<TTarget>>(callExpression, argument1Expression, argument2Expression);
+                    var sourceExpression = Expression.Parameter(sourceType, "source");
+                    var targetExpression = Expression.Parameter(targetType, "target");
+                    var callExpression = Expression.Call(tryParseMethodInfoClosed, sourceExpression, targetExpression);
+                    var callDelegateExpression = Expression.Lambda<EnumTryParseDelegate<TTarget>>(callExpression, sourceExpression, targetExpression);
                     var callDelegate = callDelegateExpression.Compile();
 
                     return callDelegate;
