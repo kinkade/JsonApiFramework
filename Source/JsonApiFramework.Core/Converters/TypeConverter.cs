@@ -99,6 +99,26 @@ namespace JsonApiFramework.Converters
                 : DateTimeOffset.ParseExact(str, context.SafeGetFormat(), context.SafeGetFormatProvider(), context.SafeGetDateTimeStyles());
         }
 
+        private static Guid? ConvertStringToNullableGuid(string str, TypeConverterContext context)
+        {
+            if (String.IsNullOrWhiteSpace(str))
+                return new Guid?();
+
+            return String.IsNullOrWhiteSpace(context.SafeGetFormat())
+                ? Guid.Parse(str)
+                : Guid.ParseExact(str, context.SafeGetFormat());
+        }
+
+        private static TimeSpan? ConvertStringToNullableTimeSpan(string str, TypeConverterContext context)
+        {
+            if (String.IsNullOrWhiteSpace(str))
+                return new TimeSpan?();
+
+            return String.IsNullOrWhiteSpace(context.SafeGetFormat())
+                ? TimeSpan.Parse(str, context.SafeGetFormatProvider())
+                : TimeSpan.ParseExact(str, context.SafeGetFormat(), context.SafeGetFormatProvider());
+        }
+
         private bool TryConvertToEnum<TSource, TTarget>(TSource source, TypeConverterContext context, out TTarget target)
         {
             target = default(TTarget);
@@ -246,6 +266,7 @@ namespace JsonApiFramework.Converters
                 new TypeConverterDefinitionFunc<string, bool?>((s, c) => !String.IsNullOrWhiteSpace(s) ? Convert.ToBoolean(s, c.SafeGetFormatProvider()) : new bool?()),
                 new TypeConverterDefinitionFunc<string, byte>((s, c) => Convert.ToByte(s, c.SafeGetFormatProvider())),
                 new TypeConverterDefinitionFunc<string, byte?>((s, c) => !String.IsNullOrWhiteSpace(s) ? Convert.ToByte(s, c.SafeGetFormatProvider()) : new byte?()),
+                new TypeConverterDefinitionFunc<string, byte[]>((s, c) => Convert.FromBase64String(s)),
                 new TypeConverterDefinitionFunc<string, char>((s, c) => Convert.ToChar(s, c.SafeGetFormatProvider())),
                 new TypeConverterDefinitionFunc<string, char?>((s, c) => !String.IsNullOrWhiteSpace(s) ? Convert.ToChar(s, c.SafeGetFormatProvider()) : new char?()),
                 new TypeConverterDefinitionFunc<string, DateTime>((s, c) => ConvertStringToNullableDateTime(s, c).GetValueOrDefault()),
@@ -258,6 +279,8 @@ namespace JsonApiFramework.Converters
                 new TypeConverterDefinitionFunc<string, double?>((s, c) => !String.IsNullOrWhiteSpace(s) ? Convert.ToDouble(s, c.SafeGetFormatProvider()) : new double?()),
                 new TypeConverterDefinitionFunc<string, float>((s, c) => Convert.ToSingle(s, c.SafeGetFormatProvider())),
                 new TypeConverterDefinitionFunc<string, float?>((s, c) => !String.IsNullOrWhiteSpace(s) ? Convert.ToSingle(s, c.SafeGetFormatProvider()) : new float?()),
+                new TypeConverterDefinitionFunc<string, Guid>((s, c) => ConvertStringToNullableGuid(s, c).GetValueOrDefault()),
+                new TypeConverterDefinitionFunc<string, Guid?>(ConvertStringToNullableGuid),
                 new TypeConverterDefinitionFunc<string, int>((s, c) => Convert.ToInt32(s, c.SafeGetFormatProvider())),
                 new TypeConverterDefinitionFunc<string, int?>((s, c) => !String.IsNullOrWhiteSpace(s) ? Convert.ToInt32(s, c.SafeGetFormatProvider()) : new int?()),
                 new TypeConverterDefinitionFunc<string, long>((s, c) => Convert.ToInt64(s, c.SafeGetFormatProvider())),
@@ -266,10 +289,14 @@ namespace JsonApiFramework.Converters
                 new TypeConverterDefinitionFunc<string, sbyte?>((s, c) => !String.IsNullOrWhiteSpace(s) ? Convert.ToSByte(s, c.SafeGetFormatProvider()) : new sbyte?()),
                 new TypeConverterDefinitionFunc<string, short>((s, c) => Convert.ToInt16(s, c.SafeGetFormatProvider())),
                 new TypeConverterDefinitionFunc<string, short?>((s, c) => !String.IsNullOrWhiteSpace(s) ? Convert.ToInt16(s, c.SafeGetFormatProvider()) : new short?()),
+                new TypeConverterDefinitionFunc<string, TimeSpan>((s, c) => ConvertStringToNullableTimeSpan(s, c).GetValueOrDefault()),
+                new TypeConverterDefinitionFunc<string, TimeSpan?>(ConvertStringToNullableTimeSpan),
+                new TypeConverterDefinitionFunc<string, Type>((s, c) => Type.GetType(s, true)),
                 new TypeConverterDefinitionFunc<string, uint>((s, c) => Convert.ToUInt32(s, c.SafeGetFormatProvider())),
                 new TypeConverterDefinitionFunc<string, uint?>((s, c) => !String.IsNullOrWhiteSpace(s) ? Convert.ToUInt32(s, c.SafeGetFormatProvider()) : new uint?()),
                 new TypeConverterDefinitionFunc<string, ulong>((s, c) => Convert.ToUInt64(s, c.SafeGetFormatProvider())),
                 new TypeConverterDefinitionFunc<string, ulong?>((s, c) => !String.IsNullOrWhiteSpace(s) ? Convert.ToUInt64(s, c.SafeGetFormatProvider()) : new ulong?()),
+                new TypeConverterDefinitionFunc<string, Uri>((s, c) => new Uri(s, UriKind.RelativeOrAbsolute)),
                 new TypeConverterDefinitionFunc<string, ushort>((s, c) => Convert.ToUInt16(s, c.SafeGetFormatProvider())),
                 new TypeConverterDefinitionFunc<string, ushort?>((s, c) => !String.IsNullOrWhiteSpace(s) ? Convert.ToUInt16(s, c.SafeGetFormatProvider()) : new ushort?()),
             };
@@ -340,7 +367,7 @@ namespace JsonApiFramework.Converters
             {
                 try
                 {
-                    return EnumTryParseImpl(source, out target);
+                    return Cache.EnumTryParseImpl(source, out target);
                 }
                 catch (Exception)
                 {
@@ -350,28 +377,32 @@ namespace JsonApiFramework.Converters
             }
             #endregion
 
-            #region Private Fields
-            private static readonly EnumTryParseDelegate<TTarget> EnumTryParseImpl = Cache.CreateEnumTryParseImpl();
-            #endregion
-
             // PRIVATE TYPES ////////////////////////////////////////////////////
             #region Types
             private static class Cache
             {
+                #region Private Fields
+                // ReSharper disable StaticFieldInGenericType
+                public static readonly EnumTryParseDelegate<TTarget> EnumTryParseImpl = Cache.CreateEnumTryParseImpl();
+                // ReSharper restore StaticFieldInGenericType
+                #endregion
+
                 #region Private Methods
-                public static EnumTryParseDelegate<TTarget> CreateEnumTryParseImpl()
+                private static EnumTryParseDelegate<TTarget> CreateEnumTryParseImpl()
                 {
                     var enumType = typeof(Enum);
-                    var tryParseMethodInfoOpen = enumType.GetMethods().FirstOrDefault(x => x.Name == "TryParse");
+                    // public static bool TryParse<TEnum>(string value, bool ignoreCase, out TEnum result) where TEnum : struct;
+                    var tryParseMethodInfoOpen = enumType.GetMethods().FirstOrDefault(x => x.Name == "TryParse" && x.GetParameters().Count() == 3);
                     var tryParseMethodInfoClosed = tryParseMethodInfoOpen.MakeGenericMethod(typeof(TTarget));
                     var arguments = tryParseMethodInfoClosed.GetParameters();
 
                     var sourceType = arguments[0].ParameterType;
-                    var targetType = arguments[1].ParameterType;
+                    var targetType = arguments[2].ParameterType;
 
                     var sourceExpression = Expression.Parameter(sourceType, "source");
+                    var ignoreCaseExpression = Expression.Constant(true, typeof(bool));
                     var targetExpression = Expression.Parameter(targetType, "target");
-                    var callExpression = Expression.Call(tryParseMethodInfoClosed, sourceExpression, targetExpression);
+                    var callExpression = Expression.Call(tryParseMethodInfoClosed, sourceExpression, ignoreCaseExpression, targetExpression);
                     var callDelegateExpression = Expression.Lambda<EnumTryParseDelegate<TTarget>>(callExpression, sourceExpression, targetExpression);
                     var callDelegate = callDelegateExpression.Compile();
 
