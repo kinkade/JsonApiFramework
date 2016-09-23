@@ -26,7 +26,7 @@ namespace JsonApiFramework.Converters
     {
         // PUBLIC METHODS ///////////////////////////////////////////////////
         #region Methods
-        bool TryConvert(TSource source, string format, IFormatProvider formatProvider, out TTarget target);
+        bool TryConvert(TSource source, TypeConverterContext context, out TTarget target);
         #endregion
     }
 }

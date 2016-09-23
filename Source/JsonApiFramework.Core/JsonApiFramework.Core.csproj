@@ -35,6 +35,9 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Clock\SystemClock.cs" />
+    <Compile Include="Converters\TypeConverterContext.cs" />
+    <Compile Include="Converters\TypeConverterContextExtensions.cs" />
+    <Compile Include="Expressions\ExpressionBuilder.cs" />
     <Compile Include="Properties\CoreErrorStrings.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -70,9 +73,7 @@
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Expressions\" />
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <EmbeddedResource Include="Properties\CoreErrorStrings.resx">
       <Generator>ResXFileCodeGenerator</Generator>

@@ -14,7 +14,7 @@ namespace JsonApiFramework.Converters
     {
         // PUBLIC CONSTRUCTORS //////////////////////////////////////////////
         #region Constructors
-        public TypeConverterDefinitionFunc(Func<TSource, string, IFormatProvider, TTarget> converter)
+        public TypeConverterDefinitionFunc(Func<TSource, TypeConverterContext, TTarget> converter)
         {
             Contract.Requires(converter != null);
 
@@ -30,16 +30,16 @@ namespace JsonApiFramework.Converters
 
         // PUBLIC METHODS ///////////////////////////////////////////////////
         #region ITypeConverterDefinition<TSource, TTarget> Implementation
-        public bool TryConvert(TSource source, string format, IFormatProvider formatProvider, out TTarget target)
+        public bool TryConvert(TSource source, TypeConverterContext context, out TTarget target)
         {
-            target = this.Converter(source, format, formatProvider);
+            target = this.Converter(source, context);
             return true;
         }
         #endregion
 
         // PRIVATE PROPERTIES ///////////////////////////////////////////////
         #region Properties
-        private Func<TSource, string, IFormatProvider, TTarget> Converter { get; set; }
+        private Func<TSource, TypeConverterContext, TTarget> Converter { get; set; }
         #endregion
     }
 }

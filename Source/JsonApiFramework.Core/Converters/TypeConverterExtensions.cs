@@ -13,14 +13,14 @@ namespace JsonApiFramework.Converters
     {
         // PUBLIC METHODS ///////////////////////////////////////////////////
         #region Extensions Methods
-        public static TTarget Convert<TSource, TTarget>(this ITypeConverter typeConverter, TSource source, string format, IFormatProvider formatProvider)
+        public static TTarget Convert<TSource, TTarget>(this ITypeConverter typeConverter, TSource source, TypeConverterContext context)
         {
             Contract.Requires(typeConverter != null);
 
             try
             {
                 TTarget target;
-                if (typeConverter.TryConvert(source, format, formatProvider, out target))
+                if (typeConverter.TryConvert(source, context, out target))
                 {
                     return target;
                 }
@@ -37,14 +37,14 @@ namespace JsonApiFramework.Converters
         {
             Contract.Requires(typeConverter != null);
 
-            return typeConverter.Convert<TSource, TTarget>(source, null, null);
+            return typeConverter.Convert<TSource, TTarget>(source, null);
         }
 
         public static bool TryConvert<TSource, TTarget>(this ITypeConverter typeConverter, TSource source, out TTarget target)
         {
             Contract.Requires(typeConverter != null);
 
-            return typeConverter.TryConvert(source, null, null, out target);
+            return typeConverter.TryConvert(source, null, out target);
         }
         #endregion
     }
