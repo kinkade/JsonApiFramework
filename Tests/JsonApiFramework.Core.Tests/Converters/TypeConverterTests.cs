@@ -59,14 +59,14 @@ namespace JsonApiFramework.Tests.Converters
         public static readonly TypeConverterContext FormatDateTimeContext = new TypeConverterContext
             {
                 Format = FullDateTimeFormat,
-                DateTimeStyles = DateTimeStyles.AssumeLocal
+                DateTimeStyles = DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal
             };
 
         public static readonly TypeConverterContext FormatAndFormatProviderDateTimeContext = new TypeConverterContext
             {
                 Format = FullDateTimeFormat,
                 FormatProvider = SpanishMexicoCulture,
-                DateTimeStyles = DateTimeStyles.AssumeLocal
+                DateTimeStyles = DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal
             };
 
         public static readonly TypeConverterContext FormatDateTimeOffsetContext = new TypeConverterContext
@@ -82,7 +82,7 @@ namespace JsonApiFramework.Tests.Converters
             DateTimeStyles = DateTimeStyles.AssumeUniversal
         };
 
-        public static readonly DateTime TestDateTime = new DateTime(1968, 5, 20, 20, 2, 42, 0, DateTimeKind.Local);
+        public static readonly DateTime TestDateTime = new DateTime(1968, 5, 20, 20, 2, 42, 0, DateTimeKind.Utc);
         public static readonly string TestDateTimeString = TestDateTime.ToString(DefaultDateTimeFormat);
         public static readonly string TestDateTimeStringWithFormat = TestDateTime.ToString(FullDateTimeFormat);
         public static readonly string TestDateTimeStringWithFormatAndFormatProvider = TestDateTime.ToString(FullDateTimeFormat, SpanishMexicoCulture);
@@ -156,6 +156,8 @@ namespace JsonApiFramework.Tests.Converters
 
         public static readonly IEnumerable<object[]> TryConvertGenericTestData = new[]
             {
+                // Simple Types /////////////////////////////////////////////
+
                 #region BoolToXXX
                 new object []
                 {
@@ -456,55 +458,55 @@ namespace JsonApiFramework.Tests.Converters
                     new object []
                         {
                             // Simple Types
-                            new TryConvertGenericTest<DateTimeOffset, bool>("DateTimeOffsetToBool", TestDateTime, ConvertResult.Failure, default(bool)),
-                            new TryConvertGenericTest<DateTimeOffset, byte>("DateTimeOffsetToByte", TestDateTime, ConvertResult.Failure, default(byte)),
-                            new TryConvertGenericTest<DateTimeOffset, byte[]>("DateTimeOffsetToByteArray", TestDateTime, ConvertResult.Failure, default(byte[])),
-                            new TryConvertGenericTest<DateTimeOffset, char>("DateTimeOffsetToChar", TestDateTime, ConvertResult.Failure, default(char)),
-                            new TryConvertGenericTest<DateTimeOffset, DateTime>("DateTimeOffsetToDateTime", TestDateTime, ConvertResult.Success, TestDateTime),
-                            new TryConvertGenericTest<DateTimeOffset, DateTimeOffset>("DateTimeOffsetToDateTimeOffset", TestDateTime, ConvertResult.Success, TestDateTimeOffset),
-                            new TryConvertGenericTest<DateTimeOffset, decimal>("DateTimeOffsetToDecimal", TestDateTime, ConvertResult.Failure, default(decimal)),
-                            new TryConvertGenericTest<DateTimeOffset, double>("DateTimeOffsetToDouble", TestDateTime, ConvertResult.Failure, default(double)),
-                            new TryConvertGenericTest<DateTimeOffset, PrimaryColor>("DateTimeOffsetToEnum", TestDateTime, ConvertResult.Failure, default(PrimaryColor)),
-                            new TryConvertGenericTest<DateTimeOffset, float>("DateTimeOffsetToFloat", TestDateTime, ConvertResult.Failure, default(float)),
-                            new TryConvertGenericTest<DateTimeOffset, Guid>("DateTimeOffsetToGuid", TestDateTime, ConvertResult.Failure, default(Guid)),
-                            new TryConvertGenericTest<DateTimeOffset, int>("DateTimeOffsetToInt", TestDateTime, ConvertResult.Failure, default(int)),
-                            new TryConvertGenericTest<DateTimeOffset, long>("DateTimeOffsetToLong", TestDateTime, ConvertResult.Failure, default(long)),
-                            new TryConvertGenericTest<DateTimeOffset, sbyte>("DateTimeOffsetToSByte", TestDateTime, ConvertResult.Failure, default(sbyte)),
-                            new TryConvertGenericTest<DateTimeOffset, short>("DateTimeOffsetToShort", TestDateTime, ConvertResult.Failure, default(short)),
-                            new TryConvertGenericTest<DateTimeOffset, string>("DateTimeOffsetToString", TestDateTime, ConvertResult.Success, TestDateTimeOffsetString),
-                            new TryConvertGenericTest<DateTimeOffset, string>("DateTimeOffsetToStringWithFormat", TestDateTime, ConvertResult.Success, TestDateTimeOffsetStringWithFormat, FormatDateTimeOffsetContext),
-                            new TryConvertGenericTest<DateTimeOffset, string>("DateTimeOffsetToStringWithFormatAndFormatProvider", TestDateTime, ConvertResult.Success, TestDateTimeOffsetStringWithFormatAndFormatProvider, FormatAndFormatProviderDateTimeOffsetContext),
-                            new TryConvertGenericTest<DateTimeOffset, TimeSpan>("DateTimeOffsetToTimeSpan", TestDateTime, ConvertResult.Failure, default(TimeSpan)),
-                            new TryConvertGenericTest<DateTimeOffset, Type>("DateTimeOffsetToType", TestDateTime, ConvertResult.Failure, default(Type)),
-                            new TryConvertGenericTest<DateTimeOffset, uint>("DateTimeOffsetToUInt", TestDateTime, ConvertResult.Failure, default(uint)),
-                            new TryConvertGenericTest<DateTimeOffset, ulong>("DateTimeOffsetToULong", TestDateTime, ConvertResult.Failure, default(ulong)),
-                            new TryConvertGenericTest<DateTimeOffset, ushort>("DateTimeOffsetToUShort", TestDateTime, ConvertResult.Failure, default(ushort)),
-                            new TryConvertGenericTest<DateTimeOffset, Uri>("DateTimeOffsetToUri", TestDateTime, ConvertResult.Failure, default(Uri)),
+                            new TryConvertGenericTest<DateTimeOffset, bool>("DateTimeOffsetToBool", TestDateTimeOffset, ConvertResult.Failure, default(bool)),
+                            new TryConvertGenericTest<DateTimeOffset, byte>("DateTimeOffsetToByte", TestDateTimeOffset, ConvertResult.Failure, default(byte)),
+                            new TryConvertGenericTest<DateTimeOffset, byte[]>("DateTimeOffsetToByteArray", TestDateTimeOffset, ConvertResult.Failure, default(byte[])),
+                            new TryConvertGenericTest<DateTimeOffset, char>("DateTimeOffsetToChar", TestDateTimeOffset, ConvertResult.Failure, default(char)),
+                            new TryConvertGenericTest<DateTimeOffset, DateTime>("DateTimeOffsetToDateTime", TestDateTimeOffset, ConvertResult.Success, TestDateTime),
+                            new TryConvertGenericTest<DateTimeOffset, DateTimeOffset>("DateTimeOffsetToDateTimeOffset", TestDateTimeOffset, ConvertResult.Success, TestDateTimeOffset),
+                            new TryConvertGenericTest<DateTimeOffset, decimal>("DateTimeOffsetToDecimal", TestDateTimeOffset, ConvertResult.Failure, default(decimal)),
+                            new TryConvertGenericTest<DateTimeOffset, double>("DateTimeOffsetToDouble", TestDateTimeOffset, ConvertResult.Failure, default(double)),
+                            new TryConvertGenericTest<DateTimeOffset, PrimaryColor>("DateTimeOffsetToEnum", TestDateTimeOffset, ConvertResult.Failure, default(PrimaryColor)),
+                            new TryConvertGenericTest<DateTimeOffset, float>("DateTimeOffsetToFloat", TestDateTimeOffset, ConvertResult.Failure, default(float)),
+                            new TryConvertGenericTest<DateTimeOffset, Guid>("DateTimeOffsetToGuid", TestDateTimeOffset, ConvertResult.Failure, default(Guid)),
+                            new TryConvertGenericTest<DateTimeOffset, int>("DateTimeOffsetToInt", TestDateTimeOffset, ConvertResult.Failure, default(int)),
+                            new TryConvertGenericTest<DateTimeOffset, long>("DateTimeOffsetToLong", TestDateTimeOffset, ConvertResult.Failure, default(long)),
+                            new TryConvertGenericTest<DateTimeOffset, sbyte>("DateTimeOffsetToSByte", TestDateTimeOffset, ConvertResult.Failure, default(sbyte)),
+                            new TryConvertGenericTest<DateTimeOffset, short>("DateTimeOffsetToShort", TestDateTimeOffset, ConvertResult.Failure, default(short)),
+                            new TryConvertGenericTest<DateTimeOffset, string>("DateTimeOffsetToString", TestDateTimeOffset, ConvertResult.Success, TestDateTimeOffsetString),
+                            new TryConvertGenericTest<DateTimeOffset, string>("DateTimeOffsetToStringWithFormat", TestDateTimeOffset, ConvertResult.Success, TestDateTimeOffsetStringWithFormat, FormatDateTimeOffsetContext),
+                            new TryConvertGenericTest<DateTimeOffset, string>("DateTimeOffsetToStringWithFormatAndFormatProvider", TestDateTimeOffset, ConvertResult.Success, TestDateTimeOffsetStringWithFormatAndFormatProvider, FormatAndFormatProviderDateTimeOffsetContext),
+                            new TryConvertGenericTest<DateTimeOffset, TimeSpan>("DateTimeOffsetToTimeSpan", TestDateTimeOffset, ConvertResult.Failure, default(TimeSpan)),
+                            new TryConvertGenericTest<DateTimeOffset, Type>("DateTimeOffsetToType", TestDateTimeOffset, ConvertResult.Failure, default(Type)),
+                            new TryConvertGenericTest<DateTimeOffset, uint>("DateTimeOffsetToUInt", TestDateTimeOffset, ConvertResult.Failure, default(uint)),
+                            new TryConvertGenericTest<DateTimeOffset, ulong>("DateTimeOffsetToULong", TestDateTimeOffset, ConvertResult.Failure, default(ulong)),
+                            new TryConvertGenericTest<DateTimeOffset, ushort>("DateTimeOffsetToUShort", TestDateTimeOffset, ConvertResult.Failure, default(ushort)),
+                            new TryConvertGenericTest<DateTimeOffset, Uri>("DateTimeOffsetToUri", TestDateTimeOffset, ConvertResult.Failure, default(Uri)),
 
                             // Nullable Types
-                            new TryConvertGenericTest<DateTimeOffset, bool?>("DateTimeOffsetToNullable<Bool>", TestDateTime, ConvertResult.Failure, default(bool?)),
-                            new TryConvertGenericTest<DateTimeOffset, byte?>("DateTimeOffsetToNullable<Byte>", TestDateTime, ConvertResult.Failure, default(byte?)),
-                            new TryConvertGenericTest<DateTimeOffset, char?>("DateTimeOffsetToNullable<Char>", TestDateTime, ConvertResult.Failure, default(char?)),
-                            new TryConvertGenericTest<DateTimeOffset, DateTime?>("DateTimeOffsetToNullable<DateTime>", TestDateTime, ConvertResult.Success, TestDateTime),
-                            new TryConvertGenericTest<DateTimeOffset, DateTimeOffset?>("DateTimeOffsetToNullable<DateTimeOffset>", TestDateTime, ConvertResult.Success, TestDateTimeOffset),
-                            new TryConvertGenericTest<DateTimeOffset, decimal?>("DateTimeOffsetToNullable<Decimal>", TestDateTime, ConvertResult.Failure, default(decimal?)),
-                            new TryConvertGenericTest<DateTimeOffset, double?>("DateTimeOffsetToNullable<Double>", TestDateTime, ConvertResult.Failure, default(double?)),
-                            new TryConvertGenericTest<DateTimeOffset, PrimaryColor?>("DateTimeOffsetToNullable<Enum>", TestDateTime, ConvertResult.Failure, default(PrimaryColor?)),
-                            new TryConvertGenericTest<DateTimeOffset, float?>("DateTimeOffsetToNullable<Float>", TestDateTime, ConvertResult.Failure, default(float?)),
-                            new TryConvertGenericTest<DateTimeOffset, Guid?>("DateTimeOffsetToNullable<Guid>", TestDateTime, ConvertResult.Failure, new Guid?()),
-                            new TryConvertGenericTest<DateTimeOffset, int?>("DateTimeOffsetToNullable<Int>", TestDateTime, ConvertResult.Failure, default(int?)),
-                            new TryConvertGenericTest<DateTimeOffset, long?>("DateTimeOffsetToNullable<Long>", TestDateTime, ConvertResult.Failure, default(long?)),
-                            new TryConvertGenericTest<DateTimeOffset, sbyte?>("DateTimeOffsetToNullable<SByte>", TestDateTime, ConvertResult.Failure, default(sbyte?)),
-                            new TryConvertGenericTest<DateTimeOffset, short?>("DateTimeOffsetToNullable<Short>", TestDateTime, ConvertResult.Failure, default(short?)),
-                            new TryConvertGenericTest<DateTimeOffset, TimeSpan?>("DateTimeOffsetToNullable<TimeSpan>", TestDateTime, ConvertResult.Failure, new TimeSpan?()),
-                            new TryConvertGenericTest<DateTimeOffset, uint?>("DateTimeOffsetToNullable<UInt>", TestDateTime, ConvertResult.Failure, default(uint?)),
-                            new TryConvertGenericTest<DateTimeOffset, ulong?>("DateTimeOffsetToNullable<ULong>", TestDateTime, ConvertResult.Failure, default(ulong?)),
-                            new TryConvertGenericTest<DateTimeOffset, ushort?>("DateTimeOffsetToNullable<UShort>", TestDateTime, ConvertResult.Failure, default(ushort?)),
+                            new TryConvertGenericTest<DateTimeOffset, bool?>("DateTimeOffsetToNullable<Bool>", TestDateTimeOffset, ConvertResult.Failure, default(bool?)),
+                            new TryConvertGenericTest<DateTimeOffset, byte?>("DateTimeOffsetToNullable<Byte>", TestDateTimeOffset, ConvertResult.Failure, default(byte?)),
+                            new TryConvertGenericTest<DateTimeOffset, char?>("DateTimeOffsetToNullable<Char>", TestDateTimeOffset, ConvertResult.Failure, default(char?)),
+                            new TryConvertGenericTest<DateTimeOffset, DateTime?>("DateTimeOffsetToNullable<DateTime>", TestDateTimeOffset, ConvertResult.Success, TestDateTime),
+                            new TryConvertGenericTest<DateTimeOffset, DateTimeOffset?>("DateTimeOffsetToNullable<DateTimeOffset>", TestDateTimeOffset, ConvertResult.Success, TestDateTimeOffset),
+                            new TryConvertGenericTest<DateTimeOffset, decimal?>("DateTimeOffsetToNullable<Decimal>", TestDateTimeOffset, ConvertResult.Failure, default(decimal?)),
+                            new TryConvertGenericTest<DateTimeOffset, double?>("DateTimeOffsetToNullable<Double>", TestDateTimeOffset, ConvertResult.Failure, default(double?)),
+                            new TryConvertGenericTest<DateTimeOffset, PrimaryColor?>("DateTimeOffsetToNullable<Enum>", TestDateTimeOffset, ConvertResult.Failure, default(PrimaryColor?)),
+                            new TryConvertGenericTest<DateTimeOffset, float?>("DateTimeOffsetToNullable<Float>", TestDateTimeOffset, ConvertResult.Failure, default(float?)),
+                            new TryConvertGenericTest<DateTimeOffset, Guid?>("DateTimeOffsetToNullable<Guid>", TestDateTimeOffset, ConvertResult.Failure, new Guid?()),
+                            new TryConvertGenericTest<DateTimeOffset, int?>("DateTimeOffsetToNullable<Int>", TestDateTimeOffset, ConvertResult.Failure, default(int?)),
+                            new TryConvertGenericTest<DateTimeOffset, long?>("DateTimeOffsetToNullable<Long>", TestDateTimeOffset, ConvertResult.Failure, default(long?)),
+                            new TryConvertGenericTest<DateTimeOffset, sbyte?>("DateTimeOffsetToNullable<SByte>", TestDateTimeOffset, ConvertResult.Failure, default(sbyte?)),
+                            new TryConvertGenericTest<DateTimeOffset, short?>("DateTimeOffsetToNullable<Short>", TestDateTimeOffset, ConvertResult.Failure, default(short?)),
+                            new TryConvertGenericTest<DateTimeOffset, TimeSpan?>("DateTimeOffsetToNullable<TimeSpan>", TestDateTimeOffset, ConvertResult.Failure, new TimeSpan?()),
+                            new TryConvertGenericTest<DateTimeOffset, uint?>("DateTimeOffsetToNullable<UInt>", TestDateTimeOffset, ConvertResult.Failure, default(uint?)),
+                            new TryConvertGenericTest<DateTimeOffset, ulong?>("DateTimeOffsetToNullable<ULong>", TestDateTimeOffset, ConvertResult.Failure, default(ulong?)),
+                            new TryConvertGenericTest<DateTimeOffset, ushort?>("DateTimeOffsetToNullable<UShort>", TestDateTimeOffset, ConvertResult.Failure, default(ushort?)),
 
                             // Interface/Class Types
-                            new TryConvertGenericTest<DateTimeOffset, IInterface>("DateTimeOffsetToInterface", TestDateTime, ConvertResult.Failure, default(IInterface)),
-                            new TryConvertGenericTest<DateTimeOffset, BaseClass>("DateTimeOffsetToBaseClass", TestDateTime, ConvertResult.Failure, default(BaseClass)),
-                            new TryConvertGenericTest<DateTimeOffset, DerivedClass>("DateTimeOffsetToDerivedClass", TestDateTime, ConvertResult.Failure, default(DerivedClass)),
+                            new TryConvertGenericTest<DateTimeOffset, IInterface>("DateTimeOffsetToInterface", TestDateTimeOffset, ConvertResult.Failure, default(IInterface)),
+                            new TryConvertGenericTest<DateTimeOffset, BaseClass>("DateTimeOffsetToBaseClass", TestDateTimeOffset, ConvertResult.Failure, default(BaseClass)),
+                            new TryConvertGenericTest<DateTimeOffset, DerivedClass>("DateTimeOffsetToDerivedClass", TestDateTimeOffset, ConvertResult.Failure, default(DerivedClass)),
                         }
                 },
                 #endregion
@@ -625,6 +627,64 @@ namespace JsonApiFramework.Tests.Converters
                 },
                 #endregion
 
+                #region EnumToXXX
+                new object []
+                {
+                    "EnumToXXX - Generic",
+                    new object []
+                        {
+                            // Simple Types
+                            new TryConvertGenericTest<PrimaryColor, bool>("EnumToBool", PrimaryColor.Blue, ConvertResult.Success, true),
+                            new TryConvertGenericTest<PrimaryColor, byte>("EnumToByte", PrimaryColor.Blue, ConvertResult.Success, TestBlueOrdinal),
+                            new TryConvertGenericTest<PrimaryColor, byte[]>("EnumToByteArray", PrimaryColor.Blue, ConvertResult.Failure, default(byte[])),
+                            new TryConvertGenericTest<PrimaryColor, char>("EnumToChar", PrimaryColor.Blue, ConvertResult.Success, '*'),
+                            new TryConvertGenericTest<PrimaryColor, DateTime>("EnumToDateTime", PrimaryColor.Blue, ConvertResult.Failure, default(DateTime)),
+                            new TryConvertGenericTest<PrimaryColor, DateTimeOffset>("EnumToDateTimeOffset", PrimaryColor.Blue, ConvertResult.Failure, default(DateTimeOffset)),
+                            new TryConvertGenericTest<PrimaryColor, decimal>("EnumToDecimal", PrimaryColor.Blue, ConvertResult.Success, TestBlueOrdinal),
+                            new TryConvertGenericTest<PrimaryColor, double>("EnumToDouble", PrimaryColor.Blue, ConvertResult.Success, TestBlueOrdinal),
+                            new TryConvertGenericTest<PrimaryColor, PrimaryColor>("EnumToEnum", PrimaryColor.Blue, ConvertResult.Success, PrimaryColor.Blue),
+                            new TryConvertGenericTest<PrimaryColor, float>("EnumToFloat", PrimaryColor.Blue, ConvertResult.Success, TestBlueOrdinal),
+                            new TryConvertGenericTest<PrimaryColor, Guid>("EnumToGuid", PrimaryColor.Blue, ConvertResult.Failure, default(Guid)),
+                            new TryConvertGenericTest<PrimaryColor, int>("EnumToInt", PrimaryColor.Blue, ConvertResult.Success, TestBlueOrdinal),
+                            new TryConvertGenericTest<PrimaryColor, long>("EnumToLong", PrimaryColor.Blue, ConvertResult.Success, TestBlueOrdinal),
+                            new TryConvertGenericTest<PrimaryColor, sbyte>("EnumToSByte", PrimaryColor.Blue, ConvertResult.Success, TestBlueOrdinal),
+                            new TryConvertGenericTest<PrimaryColor, short>("EnumToShort", PrimaryColor.Blue, ConvertResult.Success, TestBlueOrdinal),
+                            new TryConvertGenericTest<PrimaryColor, string>("EnumToString", PrimaryColor.Blue, ConvertResult.Success, TestBlueString),
+                            new TryConvertGenericTest<PrimaryColor, TimeSpan>("EnumToTimeSpan", PrimaryColor.Blue, ConvertResult.Failure, default(TimeSpan)),
+                            new TryConvertGenericTest<PrimaryColor, Type>("EnumToType", PrimaryColor.Blue, ConvertResult.Failure, default(Type)),
+                            new TryConvertGenericTest<PrimaryColor, uint>("EnumToUInt", PrimaryColor.Blue, ConvertResult.Success, TestBlueOrdinal),
+                            new TryConvertGenericTest<PrimaryColor, ulong>("EnumToULong", PrimaryColor.Blue, ConvertResult.Success, TestBlueOrdinal),
+                            new TryConvertGenericTest<PrimaryColor, ushort>("EnumToUShort", PrimaryColor.Blue, ConvertResult.Success, TestBlueOrdinal),
+                            new TryConvertGenericTest<PrimaryColor, Uri>("EnumToUri", PrimaryColor.Blue, ConvertResult.Failure, default(Uri)),
+
+                            // Nullable Types
+                            new TryConvertGenericTest<PrimaryColor, bool?>("EnumToNullable<Bool>", PrimaryColor.Blue, ConvertResult.Success, true),
+                            new TryConvertGenericTest<PrimaryColor, byte?>("EnumToNullable<Byte>", PrimaryColor.Blue, ConvertResult.Success, TestBlueOrdinal),
+                            new TryConvertGenericTest<PrimaryColor, char?>("EnumToNullable<Char>", PrimaryColor.Blue, ConvertResult.Success, '*'),
+                            new TryConvertGenericTest<PrimaryColor, DateTime?>("EnumToNullable<DateTime>", PrimaryColor.Blue, ConvertResult.Failure, default(DateTime?)),
+                            new TryConvertGenericTest<PrimaryColor, DateTimeOffset?>("EnumToNullable<DateTimeOffset>", PrimaryColor.Blue, ConvertResult.Failure, default(DateTimeOffset?)),
+                            new TryConvertGenericTest<PrimaryColor, decimal?>("EnumToNullable<Decimal>", PrimaryColor.Blue, ConvertResult.Success, TestBlueOrdinal),
+                            new TryConvertGenericTest<PrimaryColor, double?>("EnumToNullable<Double>", PrimaryColor.Blue, ConvertResult.Success, TestBlueOrdinal),
+                            new TryConvertGenericTest<PrimaryColor, PrimaryColor?>("EnumToNullable<Enum>", PrimaryColor.Blue, ConvertResult.Success, PrimaryColor.Blue),
+                            new TryConvertGenericTest<PrimaryColor, float?>("EnumToNullable<Float>", PrimaryColor.Blue, ConvertResult.Success, TestBlueOrdinal),
+                            new TryConvertGenericTest<PrimaryColor, Guid?>("EnumToNullable<Guid>", PrimaryColor.Blue, ConvertResult.Failure, default(Guid?)),
+                            new TryConvertGenericTest<PrimaryColor, int?>("EnumToNullable<Int>", PrimaryColor.Blue, ConvertResult.Success, TestBlueOrdinal),
+                            new TryConvertGenericTest<PrimaryColor, long?>("EnumToNullable<Long>", PrimaryColor.Blue, ConvertResult.Success, TestBlueOrdinal),
+                            new TryConvertGenericTest<PrimaryColor, sbyte?>("EnumToNullable<SByte>", PrimaryColor.Blue, ConvertResult.Success, TestBlueOrdinal),
+                            new TryConvertGenericTest<PrimaryColor, short?>("EnumToNullable<Short>", PrimaryColor.Blue, ConvertResult.Success, TestBlueOrdinal),
+                            new TryConvertGenericTest<PrimaryColor, TimeSpan?>("EnumToNullable<TimeSpan>", PrimaryColor.Blue, ConvertResult.Failure, default(TimeSpan?)),
+                            new TryConvertGenericTest<PrimaryColor, uint?>("EnumToNullable<UInt>", PrimaryColor.Blue, ConvertResult.Success, TestBlueOrdinal),
+                            new TryConvertGenericTest<PrimaryColor, ulong?>("EnumToNullable<ULong>", PrimaryColor.Blue, ConvertResult.Success, TestBlueOrdinal),
+                            new TryConvertGenericTest<PrimaryColor, ushort?>("EnumToNullable<UShort>", PrimaryColor.Blue, ConvertResult.Success, TestBlueOrdinal),
+
+                            // Interface/Class Types
+                            new TryConvertGenericTest<PrimaryColor, IInterface>("EnumToInterface", PrimaryColor.Blue, ConvertResult.Failure, default(IInterface)),
+                            new TryConvertGenericTest<PrimaryColor, BaseClass>("EnumToBaseClass", PrimaryColor.Blue, ConvertResult.Failure, default(BaseClass)),
+                            new TryConvertGenericTest<PrimaryColor, DerivedClass>("EnumToDerivedClass", PrimaryColor.Blue, ConvertResult.Failure, default(DerivedClass)),
+                        }
+                },
+                #endregion
+
                 #region FloatToXXX
                 new object []
                 {
@@ -679,6 +739,64 @@ namespace JsonApiFramework.Tests.Converters
                             new TryConvertGenericTest<float, IInterface>("FloatToInterface", 42, ConvertResult.Failure, default(IInterface)),
                             new TryConvertGenericTest<float, BaseClass>("FloatToBaseClass", 42, ConvertResult.Failure, default(BaseClass)),
                             new TryConvertGenericTest<float, DerivedClass>("FloatToDerivedClass", 42, ConvertResult.Failure, default(DerivedClass)),
+                        }
+                },
+                #endregion
+
+                #region GuidToXXX
+                new object []
+                {
+                    "GuidToXXX - Generic",
+                    new object []
+                        {
+                            // Simple Types
+                            new TryConvertGenericTest<Guid, bool>("GuidToBool", TestGuid, ConvertResult.Failure, default(bool)),
+                            new TryConvertGenericTest<Guid, byte>("GuidToByte", TestGuid, ConvertResult.Failure, default(byte)),
+                            new TryConvertGenericTest<Guid, byte[]>("GuidToByteArray", TestGuid, ConvertResult.Success, TestGuidByteArray),
+                            new TryConvertGenericTest<Guid, char>("GuidToChar", TestGuid, ConvertResult.Failure, default(char)),
+                            new TryConvertGenericTest<Guid, DateTime>("GuidToDateTime", TestGuid, ConvertResult.Failure, default(DateTime)),
+                            new TryConvertGenericTest<Guid, DateTimeOffset>("GuidToDateTimeOffset", TestGuid, ConvertResult.Failure, default(DateTimeOffset)),
+                            new TryConvertGenericTest<Guid, decimal>("GuidToDecimal", TestGuid, ConvertResult.Failure, default(decimal)),
+                            new TryConvertGenericTest<Guid, double>("GuidToDouble", TestGuid, ConvertResult.Failure, default(double)),
+                            new TryConvertGenericTest<Guid, PrimaryColor>("GuidToEnum", TestGuid, ConvertResult.Failure, default(PrimaryColor)),
+                            new TryConvertGenericTest<Guid, float>("GuidToFloat", TestGuid, ConvertResult.Failure, default(float)),
+                            new TryConvertGenericTest<Guid, Guid>("GuidToGuid", TestGuid, ConvertResult.Success, TestGuid),
+                            new TryConvertGenericTest<Guid, int>("GuidToInt", TestGuid, ConvertResult.Failure, default(int)),
+                            new TryConvertGenericTest<Guid, long>("GuidToLong", TestGuid, ConvertResult.Failure, default(long)),
+                            new TryConvertGenericTest<Guid, sbyte>("GuidToSByte", TestGuid, ConvertResult.Failure, default(sbyte)),
+                            new TryConvertGenericTest<Guid, short>("GuidToShort", TestGuid, ConvertResult.Failure, default(short)),
+                            new TryConvertGenericTest<Guid, string>("GuidToString", TestGuid, ConvertResult.Success, TestGuidString),
+                            new TryConvertGenericTest<Guid, TimeSpan>("GuidToTimeSpan", TestGuid, ConvertResult.Failure, default(TimeSpan)),
+                            new TryConvertGenericTest<Guid, Type>("GuidToType", TestGuid, ConvertResult.Failure, default(Type)),
+                            new TryConvertGenericTest<Guid, uint>("GuidToUInt", TestGuid, ConvertResult.Failure, default(uint)),
+                            new TryConvertGenericTest<Guid, ulong>("GuidToULong", TestGuid, ConvertResult.Failure, default(ulong)),
+                            new TryConvertGenericTest<Guid, ushort>("GuidToUShort", TestGuid, ConvertResult.Failure, default(ushort)),
+                            new TryConvertGenericTest<Guid, Uri>("GuidToUri", TestGuid, ConvertResult.Failure, default(Uri)),
+
+                            // Nullable Types
+                            new TryConvertGenericTest<Guid, bool?>("GuidToNullable<Bool>", TestGuid, ConvertResult.Failure, default(bool?)),
+                            new TryConvertGenericTest<Guid, byte?>("GuidToNullable<Byte>", TestGuid, ConvertResult.Failure, default(byte?)),
+                            new TryConvertGenericTest<Guid, char?>("GuidToNullable<Char>", TestGuid, ConvertResult.Failure, default(char?)),
+                            new TryConvertGenericTest<Guid, DateTime?>("GuidToNullable<DateTime>", TestGuid, ConvertResult.Failure, new DateTime?()),
+                            new TryConvertGenericTest<Guid, DateTimeOffset?>("GuidToNullable<DateTimeOffset>", TestGuid, ConvertResult.Failure, new DateTimeOffset?()),
+                            new TryConvertGenericTest<Guid, decimal?>("GuidToNullable<Decimal>", TestGuid, ConvertResult.Failure, default(decimal?)),
+                            new TryConvertGenericTest<Guid, double?>("GuidToNullable<Double>", TestGuid, ConvertResult.Failure, default(double?)),
+                            new TryConvertGenericTest<Guid, PrimaryColor?>("GuidToNullable<Enum>", TestGuid, ConvertResult.Failure, default(PrimaryColor?)),
+                            new TryConvertGenericTest<Guid, float?>("GuidToNullable<Float>", TestGuid, ConvertResult.Failure, default(float?)),
+                            new TryConvertGenericTest<Guid, Guid?>("GuidToNullable<Guid>", TestGuid, ConvertResult.Success, TestGuid),
+                            new TryConvertGenericTest<Guid, int?>("GuidToNullable<Int>", TestGuid, ConvertResult.Failure, default(int?)),
+                            new TryConvertGenericTest<Guid, long?>("GuidToNullable<Long>", TestGuid, ConvertResult.Failure, default(long?)),
+                            new TryConvertGenericTest<Guid, sbyte?>("GuidToNullable<SByte>", TestGuid, ConvertResult.Failure, default(sbyte?)),
+                            new TryConvertGenericTest<Guid, short?>("GuidToNullable<Short>", TestGuid, ConvertResult.Failure, default(short?)),
+                            new TryConvertGenericTest<Guid, TimeSpan?>("GuidToNullable<TimeSpan>", TestGuid, ConvertResult.Failure, new TimeSpan?()),
+                            new TryConvertGenericTest<Guid, uint?>("GuidToNullable<UInt>", TestGuid, ConvertResult.Failure, default(uint?)),
+                            new TryConvertGenericTest<Guid, ulong?>("GuidToNullable<ULong>", TestGuid, ConvertResult.Failure, default(ulong?)),
+                            new TryConvertGenericTest<Guid, ushort?>("GuidToNullable<UShort>", TestGuid, ConvertResult.Failure, default(ushort?)),
+
+                            // Interface/Class Types
+                            new TryConvertGenericTest<Guid, IInterface>("GuidToInterface", TestGuid, ConvertResult.Failure, default(IInterface)),
+                            new TryConvertGenericTest<Guid, BaseClass>("GuidToBaseClass", TestGuid, ConvertResult.Failure, default(BaseClass)),
+                            new TryConvertGenericTest<Guid, DerivedClass>("GuidToDerivedClass", TestGuid, ConvertResult.Failure, default(DerivedClass)),
                         }
                 },
                 #endregion
@@ -1008,6 +1126,360 @@ namespace JsonApiFramework.Tests.Converters
                         }
                 },
                 #endregion
+
+                #region TimeSpanToXXX
+                new object []
+                {
+                    "TimeSpanToXXX - Generic",
+                    new object []
+                        {
+                            // Simple Types
+                            new TryConvertGenericTest<TimeSpan, bool>("TimeSpanToBool", TestTimeSpan, ConvertResult.Failure, default(bool)),
+                            new TryConvertGenericTest<TimeSpan, byte>("TimeSpanToByte", TestTimeSpan, ConvertResult.Failure, default(byte)),
+                            new TryConvertGenericTest<TimeSpan, byte[]>("TimeSpanToByteArray", TestTimeSpan, ConvertResult.Failure, default(byte[])),
+                            new TryConvertGenericTest<TimeSpan, char>("TimeSpanToChar", TestTimeSpan, ConvertResult.Failure, default(char)),
+                            new TryConvertGenericTest<TimeSpan, DateTime>("TimeSpanToDateTime", TestTimeSpan, ConvertResult.Failure, default(DateTime)),
+                            new TryConvertGenericTest<TimeSpan, DateTimeOffset>("TimeSpanToDateTimeOffset", TestTimeSpan, ConvertResult.Failure, default(DateTimeOffset)),
+                            new TryConvertGenericTest<TimeSpan, decimal>("TimeSpanToDecimal", TestTimeSpan, ConvertResult.Failure, default(decimal)),
+                            new TryConvertGenericTest<TimeSpan, double>("TimeSpanToDouble", TestTimeSpan, ConvertResult.Failure, default(double)),
+                            new TryConvertGenericTest<TimeSpan, PrimaryColor>("TimeSpanToEnum", TestTimeSpan, ConvertResult.Failure, default(PrimaryColor)),
+                            new TryConvertGenericTest<TimeSpan, float>("TimeSpanToFloat", TestTimeSpan, ConvertResult.Failure, default(float)),
+                            new TryConvertGenericTest<TimeSpan, Guid>("TimeSpanToGuid", TestTimeSpan, ConvertResult.Failure, default(Guid)),
+                            new TryConvertGenericTest<TimeSpan, int>("TimeSpanToInt", TestTimeSpan, ConvertResult.Failure, default(int)),
+                            new TryConvertGenericTest<TimeSpan, long>("TimeSpanToLong", TestTimeSpan, ConvertResult.Failure, default(long)),
+                            new TryConvertGenericTest<TimeSpan, sbyte>("TimeSpanToSByte", TestTimeSpan, ConvertResult.Failure, default(sbyte)),
+                            new TryConvertGenericTest<TimeSpan, short>("TimeSpanToShort", TestTimeSpan, ConvertResult.Failure, default(short)),
+                            new TryConvertGenericTest<TimeSpan, string>("TimeSpanToString", TestTimeSpan, ConvertResult.Success, TestDateTimeString),
+                            new TryConvertGenericTest<TimeSpan, string>("TimeSpanToStringWithFormat", TestTimeSpan, ConvertResult.Success, TestDateTimeStringWithFormat, FormatDateTimeContext),
+                            new TryConvertGenericTest<TimeSpan, string>("TimeSpanToStringWithFormatAndFormatProvider", TestTimeSpan, ConvertResult.Success, TestDateTimeStringWithFormatAndFormatProvider, FormatAndFormatProviderDateTimeContext),
+                            new TryConvertGenericTest<TimeSpan, TimeSpan>("TimeSpanToTimeSpan", TestTimeSpan, ConvertResult.Success, TestTimeSpan),
+                            new TryConvertGenericTest<TimeSpan, Type>("TimeSpanToType", TestTimeSpan, ConvertResult.Failure, default(Type)),
+                            new TryConvertGenericTest<TimeSpan, uint>("TimeSpanToUInt", TestTimeSpan, ConvertResult.Failure, default(uint)),
+                            new TryConvertGenericTest<TimeSpan, ulong>("TimeSpanToULong", TestTimeSpan, ConvertResult.Failure, default(ulong)),
+                            new TryConvertGenericTest<TimeSpan, ushort>("TimeSpanToUShort", TestTimeSpan, ConvertResult.Failure, default(ushort)),
+                            new TryConvertGenericTest<TimeSpan, Uri>("TimeSpanToUri", TestTimeSpan, ConvertResult.Failure, default(Uri)),
+
+                            // Nullable Types
+                            new TryConvertGenericTest<TimeSpan, bool?>("TimeSpanToNullable<Bool>", TestTimeSpan, ConvertResult.Failure, default(bool?)),
+                            new TryConvertGenericTest<TimeSpan, byte?>("TimeSpanToNullable<Byte>", TestTimeSpan, ConvertResult.Failure, default(byte?)),
+                            new TryConvertGenericTest<TimeSpan, char?>("TimeSpanToNullable<Char>", TestTimeSpan, ConvertResult.Failure, default(char?)),
+                            new TryConvertGenericTest<TimeSpan, DateTime?>("TimeSpanToNullable<DateTime>", TestTimeSpan, ConvertResult.Failure, default(DateTime?)),
+                            new TryConvertGenericTest<TimeSpan, DateTimeOffset?>("TimeSpanToNullable<DateTimeOffset>", TestTimeSpan, ConvertResult.Failure, default(DateTimeOffset?)),
+                            new TryConvertGenericTest<TimeSpan, decimal?>("TimeSpanToNullable<Decimal>", TestTimeSpan, ConvertResult.Failure, default(decimal?)),
+                            new TryConvertGenericTest<TimeSpan, double?>("TimeSpanToNullable<Double>", TestTimeSpan, ConvertResult.Failure, default(double?)),
+                            new TryConvertGenericTest<TimeSpan, PrimaryColor?>("TimeSpanToNullable<Enum>", TestTimeSpan, ConvertResult.Failure, default(PrimaryColor?)),
+                            new TryConvertGenericTest<TimeSpan, float?>("TimeSpanToNullable<Float>", TestTimeSpan, ConvertResult.Failure, default(float?)),
+                            new TryConvertGenericTest<TimeSpan, Guid?>("TimeSpanToNullable<Guid>", TestTimeSpan, ConvertResult.Failure, new Guid?()),
+                            new TryConvertGenericTest<TimeSpan, int?>("TimeSpanToNullable<Int>", TestTimeSpan, ConvertResult.Failure, default(int?)),
+                            new TryConvertGenericTest<TimeSpan, long?>("TimeSpanToNullable<Long>", TestTimeSpan, ConvertResult.Failure, default(long?)),
+                            new TryConvertGenericTest<TimeSpan, sbyte?>("TimeSpanToNullable<SByte>", TestTimeSpan, ConvertResult.Failure, default(sbyte?)),
+                            new TryConvertGenericTest<TimeSpan, short?>("TimeSpanToNullable<Short>", TestTimeSpan, ConvertResult.Failure, default(short?)),
+                            new TryConvertGenericTest<TimeSpan, TimeSpan?>("TimeSpanToNullable<TimeSpan>", TestTimeSpan, ConvertResult.Success, TestTimeSpan),
+                            new TryConvertGenericTest<TimeSpan, uint?>("TimeSpanToNullable<UInt>", TestTimeSpan, ConvertResult.Failure, default(uint?)),
+                            new TryConvertGenericTest<TimeSpan, ulong?>("TimeSpanToNullable<ULong>", TestTimeSpan, ConvertResult.Failure, default(ulong?)),
+                            new TryConvertGenericTest<TimeSpan, ushort?>("TimeSpanToNullable<UShort>", TestTimeSpan, ConvertResult.Failure, default(ushort?)),
+
+                            // Interface/Class Types
+                            new TryConvertGenericTest<TimeSpan, IInterface>("TimeSpanToInterface", TestTimeSpan, ConvertResult.Failure, default(IInterface)),
+                            new TryConvertGenericTest<TimeSpan, BaseClass>("TimeSpanToBaseClass", TestTimeSpan, ConvertResult.Failure, default(BaseClass)),
+                            new TryConvertGenericTest<TimeSpan, DerivedClass>("TimeSpanToDerivedClass", TestTimeSpan, ConvertResult.Failure, default(DerivedClass)),
+                        }
+                },
+                #endregion
+
+                #region TypeToXXX
+                new object []
+                {
+                    "TypeToXXX - Generic",
+                    new object []
+                        {
+                            // Simple Types
+                            new TryConvertGenericTest<Type, bool>("TypeToBool", TestType, ConvertResult.Failure, default(bool)),
+                            new TryConvertGenericTest<Type, byte>("TypeToByte", TestType, ConvertResult.Failure, default(byte)),
+                            new TryConvertGenericTest<Type, byte[]>("TypeToByteArray", TestType, ConvertResult.Failure, default(byte[])),
+                            new TryConvertGenericTest<Type, char>("TypeToChar", TestType, ConvertResult.Failure, default(char)),
+                            new TryConvertGenericTest<Type, DateTime>("TypeToDateTime", TestType, ConvertResult.Failure, default(DateTime)),
+                            new TryConvertGenericTest<Type, DateTimeOffset>("TypeToDateTimeOffset", TestType, ConvertResult.Failure, default(DateTimeOffset)),
+                            new TryConvertGenericTest<Type, decimal>("TypeToDecimal", TestType, ConvertResult.Failure, default(decimal)),
+                            new TryConvertGenericTest<Type, double>("TypeToDouble", TestType, ConvertResult.Failure, default(double)),
+                            new TryConvertGenericTest<Type, PrimaryColor>("TypeToEnum", TestType, ConvertResult.Failure, default(PrimaryColor)),
+                            new TryConvertGenericTest<Type, float>("TypeToFloat", TestType, ConvertResult.Failure, default(float)),
+                            new TryConvertGenericTest<Type, Guid>("TypeToGuid", TestType, ConvertResult.Failure, default(Guid)),
+                            new TryConvertGenericTest<Type, int>("TypeToInt", TestType, ConvertResult.Failure, default(int)),
+                            new TryConvertGenericTest<Type, long>("TypeToLong", TestType, ConvertResult.Failure, default(long)),
+                            new TryConvertGenericTest<Type, sbyte>("TypeToSByte", TestType, ConvertResult.Failure, default(sbyte)),
+                            new TryConvertGenericTest<Type, short>("TypeToShort", TestType, ConvertResult.Failure, default(short)),
+                            new TryConvertGenericTest<Type, string>("TypeToString", TestType, ConvertResult.Success, TestTypeString),
+                            new TryConvertGenericTest<Type, TimeSpan>("TypeToTimeSpan", TestType, ConvertResult.Failure, default(TimeSpan)),
+                            new TryConvertGenericTest<Type, Type>("TypeToType", TestType, ConvertResult.Success, TestType),
+                            new TryConvertGenericTest<Type, uint>("TypeToUInt", TestType, ConvertResult.Failure, default(uint)),
+                            new TryConvertGenericTest<Type, ulong>("TypeToULong", TestType, ConvertResult.Failure, default(ulong)),
+                            new TryConvertGenericTest<Type, ushort>("TypeToUShort", TestType, ConvertResult.Failure, default(ushort)),
+                            new TryConvertGenericTest<Type, Uri>("TypeToUri", TestType, ConvertResult.Failure, default(Uri)),
+
+                            // Nullable Types
+                            new TryConvertGenericTest<Type, bool?>("TypeToNullable<Bool>", TestType, ConvertResult.Failure, default(bool?)),
+                            new TryConvertGenericTest<Type, byte?>("TypeToNullable<Byte>", TestType, ConvertResult.Failure, default(byte?)),
+                            new TryConvertGenericTest<Type, char?>("TypeToNullable<Char>", TestType, ConvertResult.Failure, default(char?)),
+                            new TryConvertGenericTest<Type, DateTime?>("TypeToNullable<DateTime>", TestType, ConvertResult.Failure, new DateTime?()),
+                            new TryConvertGenericTest<Type, DateTimeOffset?>("TypeToNullable<DateTimeOffset>", TestType, ConvertResult.Failure, new DateTimeOffset?()),
+                            new TryConvertGenericTest<Type, decimal?>("TypeToNullable<Decimal>", TestType, ConvertResult.Failure, default(decimal?)),
+                            new TryConvertGenericTest<Type, double?>("TypeToNullable<Double>", TestType, ConvertResult.Failure, default(double?)),
+                            new TryConvertGenericTest<Type, PrimaryColor?>("TypeToNullable<Enum>", TestType, ConvertResult.Failure, default(PrimaryColor?)),
+                            new TryConvertGenericTest<Type, float?>("TypeToNullable<Float>", TestType, ConvertResult.Failure, default(float?)),
+                            new TryConvertGenericTest<Type, Guid?>("TypeToNullable<Guid>", TestType, ConvertResult.Failure, new Guid?()),
+                            new TryConvertGenericTest<Type, int?>("TypeToNullable<Int>", TestType, ConvertResult.Failure, default(int?)),
+                            new TryConvertGenericTest<Type, long?>("TypeToNullable<Long>", TestType, ConvertResult.Failure, default(long?)),
+                            new TryConvertGenericTest<Type, sbyte?>("TypeToNullable<SByte>", TestType, ConvertResult.Failure, default(sbyte?)),
+                            new TryConvertGenericTest<Type, short?>("TypeToNullable<Short>", TestType, ConvertResult.Failure, default(short?)),
+                            new TryConvertGenericTest<Type, TimeSpan?>("TypeToNullable<TimeSpan>", TestType, ConvertResult.Failure, new TimeSpan?()),
+                            new TryConvertGenericTest<Type, uint?>("TypeToNullable<UInt>", TestType, ConvertResult.Failure, default(uint?)),
+                            new TryConvertGenericTest<Type, ulong?>("TypeToNullable<ULong>", TestType, ConvertResult.Failure, default(ulong?)),
+                            new TryConvertGenericTest<Type, ushort?>("TypeToNullable<UShort>", TestType, ConvertResult.Failure, default(ushort?)),
+
+                            // Interface/Class Types
+                            new TryConvertGenericTest<Type, IInterface>("TypeToInterface", TestType, ConvertResult.Failure, default(IInterface)),
+                            new TryConvertGenericTest<Type, BaseClass>("TypeToBaseClass", TestType, ConvertResult.Failure, default(BaseClass)),
+                            new TryConvertGenericTest<Type, DerivedClass>("TypeToDerivedClass", TestType, ConvertResult.Failure, default(DerivedClass)),
+                        }
+                },
+                #endregion
+
+                #region UIntToXXX
+                new object []
+                {
+                    "UIntToXXX - Generic",
+                    new object []
+                        {
+                            // Simple Types
+                            new TryConvertGenericTest<uint, bool>("UIntToBool", 42, ConvertResult.Success, true),
+                            new TryConvertGenericTest<uint, byte>("UIntToByte", 42, ConvertResult.Success, 42),
+                            new TryConvertGenericTest<uint, byte[]>("UIntToByteArray", 42, ConvertResult.Failure, default(byte[])),
+                            new TryConvertGenericTest<uint, char>("UIntToChar", 42, ConvertResult.Success, '*'),
+                            new TryConvertGenericTest<uint, DateTime>("UIntToDateTime", 42, ConvertResult.Failure, default(DateTime)),
+                            new TryConvertGenericTest<uint, DateTimeOffset>("UIntToDateTimeOffset", 42, ConvertResult.Failure, default(DateTimeOffset)),
+                            new TryConvertGenericTest<uint, decimal>("UIntToDecimal", 42, ConvertResult.Success, 42),
+                            new TryConvertGenericTest<uint, double>("UIntToDouble", 42, ConvertResult.Success, 42),
+                            new TryConvertGenericTest<uint, PrimaryColor>("UIntToEnum", 42, ConvertResult.Success, PrimaryColor.Blue),
+                            new TryConvertGenericTest<uint, float>("UIntToFloat", 42, ConvertResult.Success, 42),
+                            new TryConvertGenericTest<uint, Guid>("UIntToGuid", 42, ConvertResult.Failure, default(Guid)),
+                            new TryConvertGenericTest<uint, int>("UIntToInt", 42, ConvertResult.Success, 42),
+                            new TryConvertGenericTest<uint, long>("UIntToLong", 42, ConvertResult.Success, 42),
+                            new TryConvertGenericTest<uint, sbyte>("UIntToSByte", 42, ConvertResult.Success, 42),
+                            new TryConvertGenericTest<uint, short>("UIntToShort", 42, ConvertResult.Success, 42),
+                            new TryConvertGenericTest<uint, string>("UIntToString", 42, ConvertResult.Success, "42"),
+                            new TryConvertGenericTest<uint, TimeSpan>("UIntToTimeSpan", 42, ConvertResult.Failure, default(TimeSpan)),
+                            new TryConvertGenericTest<uint, Type>("UIntToType", 42, ConvertResult.Failure, default(Type)),
+                            new TryConvertGenericTest<uint, uint>("UIntToUInt", 42, ConvertResult.Success, 42),
+                            new TryConvertGenericTest<uint, ulong>("UIntToULong", 42, ConvertResult.Success, 42),
+                            new TryConvertGenericTest<uint, ushort>("UIntToUShort", 42, ConvertResult.Success, 42),
+                            new TryConvertGenericTest<uint, Uri>("UIntToUri", 42, ConvertResult.Failure, default(Uri)),
+
+                            // Nullable Types
+                            new TryConvertGenericTest<uint, bool?>("UIntToNullable<Bool>", 42, ConvertResult.Success, true),
+                            new TryConvertGenericTest<uint, byte?>("UIntToNullable<Byte>", 42, ConvertResult.Success, 42),
+                            new TryConvertGenericTest<uint, char?>("UIntToNullable<Char>", 42, ConvertResult.Success, '*'),
+                            new TryConvertGenericTest<uint, DateTime?>("UIntToNullable<DateTime>", 42, ConvertResult.Failure, default(DateTime?)),
+                            new TryConvertGenericTest<uint, DateTimeOffset?>("UIntToNullable<DateTimeOffset>", 42, ConvertResult.Failure, default(DateTimeOffset?)),
+                            new TryConvertGenericTest<uint, decimal?>("UIntToNullable<Decimal>", 42, ConvertResult.Success, 42),
+                            new TryConvertGenericTest<uint, double?>("UIntToNullable<Double>", 42, ConvertResult.Success, 42),
+                            new TryConvertGenericTest<uint, PrimaryColor?>("UIntToNullable<Enum>", 42, ConvertResult.Success, PrimaryColor.Blue),
+                            new TryConvertGenericTest<uint, float?>("UIntToNullable<Float>", 42, ConvertResult.Success, 42),
+                            new TryConvertGenericTest<uint, Guid?>("UIntToNullable<Guid>", 42, ConvertResult.Failure, default(Guid?)),
+                            new TryConvertGenericTest<uint, int?>("UIntToNullable<Int>", 42, ConvertResult.Success, 42),
+                            new TryConvertGenericTest<uint, long?>("UIntToNullable<Long>", 42, ConvertResult.Success, 42),
+                            new TryConvertGenericTest<uint, sbyte?>("UIntToNullable<SByte>", 42, ConvertResult.Success, 42),
+                            new TryConvertGenericTest<uint, short?>("UIntToNullable<Short>", 42, ConvertResult.Success, 42),
+                            new TryConvertGenericTest<uint, TimeSpan?>("UIntToNullable<TimeSpan>", 42, ConvertResult.Failure, default(TimeSpan?)),
+                            new TryConvertGenericTest<uint, uint?>("UIntToNullable<UInt>", 42, ConvertResult.Success, 42),
+                            new TryConvertGenericTest<uint, ulong?>("UIntToNullable<ULong>", 42, ConvertResult.Success, 42),
+                            new TryConvertGenericTest<uint, ushort?>("UIntToNullable<UShort>", 42, ConvertResult.Success, 42),
+
+                            // Interface/Class Types
+                            new TryConvertGenericTest<uint, IInterface>("UIntToInterface", 42, ConvertResult.Failure, default(IInterface)),
+                            new TryConvertGenericTest<uint, BaseClass>("UIntToBaseClass", 42, ConvertResult.Failure, default(BaseClass)),
+                            new TryConvertGenericTest<uint, DerivedClass>("UIntToDerivedClass", 42, ConvertResult.Failure, default(DerivedClass)),
+                        }
+                },
+                #endregion
+
+                #region ULongToXXX
+                new object []
+                {
+                    "ULongToXXX - Generic",
+                    new object []
+                        {
+                            // Simple Types
+                            new TryConvertGenericTest<ulong, bool>("ULongToBool", 42, ConvertResult.Success, true),
+                            new TryConvertGenericTest<ulong, byte>("ULongToByte", 42, ConvertResult.Success, 42),
+                            new TryConvertGenericTest<ulong, byte[]>("ULongToByteArray", 42, ConvertResult.Failure, default(byte[])),
+                            new TryConvertGenericTest<ulong, char>("ULongToChar", 42, ConvertResult.Success, '*'),
+                            new TryConvertGenericTest<ulong, DateTime>("ULongToDateTime", 42, ConvertResult.Failure, default(DateTime)),
+                            new TryConvertGenericTest<ulong, DateTimeOffset>("ULongToDateTimeOffset", 42, ConvertResult.Failure, default(DateTimeOffset)),
+                            new TryConvertGenericTest<ulong, decimal>("ULongToDecimal", 42, ConvertResult.Success, 42),
+                            new TryConvertGenericTest<ulong, double>("ULongToDouble", 42, ConvertResult.Success, 42),
+                            new TryConvertGenericTest<ulong, PrimaryColor>("ULongToEnum", 42, ConvertResult.Success, PrimaryColor.Blue),
+                            new TryConvertGenericTest<ulong, float>("ULongToFloat", 42, ConvertResult.Success, 42),
+                            new TryConvertGenericTest<ulong, Guid>("ULongToGuid", 42, ConvertResult.Failure, default(Guid)),
+                            new TryConvertGenericTest<ulong, int>("ULongToInt", 42, ConvertResult.Success, 42),
+                            new TryConvertGenericTest<ulong, long>("ULongToLong", 42, ConvertResult.Success, 42),
+                            new TryConvertGenericTest<ulong, sbyte>("ULongToSByte", 42, ConvertResult.Success, 42),
+                            new TryConvertGenericTest<ulong, short>("ULongToShort", 42, ConvertResult.Success, 42),
+                            new TryConvertGenericTest<ulong, string>("ULongToString", 42, ConvertResult.Success, "42"),
+                            new TryConvertGenericTest<ulong, TimeSpan>("ULongToTimeSpan", 42, ConvertResult.Failure, default(TimeSpan)),
+                            new TryConvertGenericTest<ulong, Type>("ULongToType", 42, ConvertResult.Failure, default(Type)),
+                            new TryConvertGenericTest<ulong, uint>("ULongToUInt", 42, ConvertResult.Success, 42),
+                            new TryConvertGenericTest<ulong, ulong>("ULongToULong", 42, ConvertResult.Success, 42),
+                            new TryConvertGenericTest<ulong, ushort>("ULongToUShort", 42, ConvertResult.Success, 42),
+                            new TryConvertGenericTest<ulong, Uri>("ULongToUri", 42, ConvertResult.Failure, default(Uri)),
+
+                            // Nullable Types
+                            new TryConvertGenericTest<ulong, bool?>("ULongToNullable<Bool>", 42, ConvertResult.Success, true),
+                            new TryConvertGenericTest<ulong, byte?>("ULongToNullable<Byte>", 42, ConvertResult.Success, 42),
+                            new TryConvertGenericTest<ulong, char?>("ULongToNullable<Char>", 42, ConvertResult.Success, '*'),
+                            new TryConvertGenericTest<ulong, DateTime?>("ULongToNullable<DateTime>", 42, ConvertResult.Failure, default(DateTime?)),
+                            new TryConvertGenericTest<ulong, DateTimeOffset?>("ULongToNullable<DateTimeOffset>", 42, ConvertResult.Failure, default(DateTimeOffset?)),
+                            new TryConvertGenericTest<ulong, decimal?>("ULongToNullable<Decimal>", 42, ConvertResult.Success, 42),
+                            new TryConvertGenericTest<ulong, double?>("ULongToNullable<Double>", 42, ConvertResult.Success, 42),
+                            new TryConvertGenericTest<ulong, PrimaryColor?>("ULongToNullable<Enum>", 42, ConvertResult.Success, PrimaryColor.Blue),
+                            new TryConvertGenericTest<ulong, float?>("ULongToNullable<Float>", 42, ConvertResult.Success, 42),
+                            new TryConvertGenericTest<ulong, Guid?>("ULongToNullable<Guid>", 42, ConvertResult.Failure, default(Guid?)),
+                            new TryConvertGenericTest<ulong, int?>("ULongToNullable<Int>", 42, ConvertResult.Success, 42),
+                            new TryConvertGenericTest<ulong, long?>("ULongToNullable<Long>", 42, ConvertResult.Success, 42),
+                            new TryConvertGenericTest<ulong, sbyte?>("ULongToNullable<SByte>", 42, ConvertResult.Success, 42),
+                            new TryConvertGenericTest<ulong, short?>("ULongToNullable<Short>", 42, ConvertResult.Success, 42),
+                            new TryConvertGenericTest<ulong, TimeSpan?>("ULongToNullable<TimeSpan>", 42, ConvertResult.Failure, default(TimeSpan?)),
+                            new TryConvertGenericTest<ulong, uint?>("ULongToNullable<UInt>", 42, ConvertResult.Success, 42),
+                            new TryConvertGenericTest<ulong, ulong?>("ULongToNullable<ULong>", 42, ConvertResult.Success, 42),
+                            new TryConvertGenericTest<ulong, ushort?>("ULongToNullable<UShort>", 42, ConvertResult.Success, 42),
+
+                            // Interface/Class Types
+                            new TryConvertGenericTest<ulong, IInterface>("ULongToInterface", 42, ConvertResult.Failure, default(IInterface)),
+                            new TryConvertGenericTest<ulong, BaseClass>("ULongToBaseClass", 42, ConvertResult.Failure, default(BaseClass)),
+                            new TryConvertGenericTest<ulong, DerivedClass>("ULongToDerivedClass", 42, ConvertResult.Failure, default(DerivedClass)),
+                        }
+                },
+                #endregion
+
+                #region UShortToXXX
+                new object []
+                {
+                    "UShortToXXX - Generic",
+                    new object []
+                        {
+                            // Simple Types
+                            new TryConvertGenericTest<ushort, bool>("UShortToBool", 42, ConvertResult.Success, true),
+                            new TryConvertGenericTest<ushort, byte>("UShortToByte", 42, ConvertResult.Success, 42),
+                            new TryConvertGenericTest<ushort, byte[]>("UShortToByteArray", 42, ConvertResult.Failure, default(byte[])),
+                            new TryConvertGenericTest<ushort, char>("UShortToChar", 42, ConvertResult.Success, '*'),
+                            new TryConvertGenericTest<ushort, DateTime>("UShortToDateTime", 42, ConvertResult.Failure, default(DateTime)),
+                            new TryConvertGenericTest<ushort, DateTimeOffset>("UShortToDateTimeOffset", 42, ConvertResult.Failure, default(DateTimeOffset)),
+                            new TryConvertGenericTest<ushort, decimal>("UShortToDecimal", 42, ConvertResult.Success, 42),
+                            new TryConvertGenericTest<ushort, double>("UShortToDouble", 42, ConvertResult.Success, 42),
+                            new TryConvertGenericTest<ushort, PrimaryColor>("UShortToEnum", 42, ConvertResult.Success, PrimaryColor.Blue),
+                            new TryConvertGenericTest<ushort, float>("UShortToFloat", 42, ConvertResult.Success, 42),
+                            new TryConvertGenericTest<ushort, Guid>("UShortToGuid", 42, ConvertResult.Failure, default(Guid)),
+                            new TryConvertGenericTest<ushort, int>("UShortToInt", 42, ConvertResult.Success, 42),
+                            new TryConvertGenericTest<ushort, long>("UShortToLong", 42, ConvertResult.Success, 42),
+                            new TryConvertGenericTest<ushort, sbyte>("UShortToSByte", 42, ConvertResult.Success, 42),
+                            new TryConvertGenericTest<ushort, short>("UShortToShort", 42, ConvertResult.Success, 42),
+                            new TryConvertGenericTest<ushort, string>("UShortToString", 42, ConvertResult.Success, "42"),
+                            new TryConvertGenericTest<ushort, TimeSpan>("UShortToTimeSpan", 42, ConvertResult.Failure, default(TimeSpan)),
+                            new TryConvertGenericTest<ushort, Type>("UShortToType", 42, ConvertResult.Failure, default(Type)),
+                            new TryConvertGenericTest<ushort, uint>("UShortToUInt", 42, ConvertResult.Success, 42),
+                            new TryConvertGenericTest<ushort, ulong>("UShortToULong", 42, ConvertResult.Success, 42),
+                            new TryConvertGenericTest<ushort, ushort>("UShortToUShort", 42, ConvertResult.Success, 42),
+                            new TryConvertGenericTest<ushort, Uri>("UShortToUri", 42, ConvertResult.Failure, default(Uri)),
+
+                            // Nullable Types
+                            new TryConvertGenericTest<ushort, bool?>("UShortToNullable<Bool>", 42, ConvertResult.Success, true),
+                            new TryConvertGenericTest<ushort, byte?>("UShortToNullable<Byte>", 42, ConvertResult.Success, 42),
+                            new TryConvertGenericTest<ushort, char?>("UShortToNullable<Char>", 42, ConvertResult.Success, '*'),
+                            new TryConvertGenericTest<ushort, DateTime?>("UShortToNullable<DateTime>", 42, ConvertResult.Failure, default(DateTime?)),
+                            new TryConvertGenericTest<ushort, DateTimeOffset?>("UShortToNullable<DateTimeOffset>", 42, ConvertResult.Failure, default(DateTimeOffset?)),
+                            new TryConvertGenericTest<ushort, decimal?>("UShortToNullable<Decimal>", 42, ConvertResult.Success, 42),
+                            new TryConvertGenericTest<ushort, double?>("UShortToNullable<Double>", 42, ConvertResult.Success, 42),
+                            new TryConvertGenericTest<ushort, PrimaryColor?>("UShortToNullable<Enum>", 42, ConvertResult.Success, PrimaryColor.Blue),
+                            new TryConvertGenericTest<ushort, float?>("UShortToNullable<Float>", 42, ConvertResult.Success, 42),
+                            new TryConvertGenericTest<ushort, Guid?>("UShortToNullable<Guid>", 42, ConvertResult.Failure, default(Guid?)),
+                            new TryConvertGenericTest<ushort, int?>("UShortToNullable<Int>", 42, ConvertResult.Success, 42),
+                            new TryConvertGenericTest<ushort, long?>("UShortToNullable<Long>", 42, ConvertResult.Success, 42),
+                            new TryConvertGenericTest<ushort, sbyte?>("UShortToNullable<SByte>", 42, ConvertResult.Success, 42),
+                            new TryConvertGenericTest<ushort, short?>("UShortToNullable<Short>", 42, ConvertResult.Success, 42),
+                            new TryConvertGenericTest<ushort, TimeSpan?>("UShortToNullable<TimeSpan>", 42, ConvertResult.Failure, default(TimeSpan?)),
+                            new TryConvertGenericTest<ushort, uint?>("UShortToNullable<UInt>", 42, ConvertResult.Success, 42),
+                            new TryConvertGenericTest<ushort, ulong?>("UShortToNullable<ULong>", 42, ConvertResult.Success, 42),
+                            new TryConvertGenericTest<ushort, ushort?>("UShortToNullable<UShort>", 42, ConvertResult.Success, 42),
+
+                            // Interface/Class Types
+                            new TryConvertGenericTest<ushort, IInterface>("UShortToInterface", 42, ConvertResult.Failure, default(IInterface)),
+                            new TryConvertGenericTest<ushort, BaseClass>("UShortToBaseClass", 42, ConvertResult.Failure, default(BaseClass)),
+                            new TryConvertGenericTest<ushort, DerivedClass>("UShortToDerivedClass", 42, ConvertResult.Failure, default(DerivedClass)),
+                        }
+                },
+                #endregion
+
+                #region UriToXXX
+                new object []
+                {
+                    "UriToXXX - Generic",
+                    new object []
+                        {
+                            // Simple Types
+                            new TryConvertGenericTest<Uri, bool>("UriToBool", TestUri, ConvertResult.Failure, default(bool)),
+                            new TryConvertGenericTest<Uri, byte>("UriToByte", TestUri, ConvertResult.Failure, default(byte)),
+                            new TryConvertGenericTest<Uri, byte[]>("UriToByteArray", TestUri, ConvertResult.Failure, default(byte[])),
+                            new TryConvertGenericTest<Uri, char>("UriToChar", TestUri, ConvertResult.Failure, default(char)),
+                            new TryConvertGenericTest<Uri, DateTime>("UriToDateTime", TestUri, ConvertResult.Failure, default(DateTime)),
+                            new TryConvertGenericTest<Uri, DateTimeOffset>("UriToDateTimeOffset", TestUri, ConvertResult.Failure, default(DateTimeOffset)),
+                            new TryConvertGenericTest<Uri, decimal>("UriToDecimal", TestUri, ConvertResult.Failure, default(decimal)),
+                            new TryConvertGenericTest<Uri, double>("UriToDouble", TestUri, ConvertResult.Failure, default(double)),
+                            new TryConvertGenericTest<Uri, PrimaryColor>("UriToEnum", TestUri, ConvertResult.Failure, default(PrimaryColor)),
+                            new TryConvertGenericTest<Uri, float>("UriToFloat", TestUri, ConvertResult.Failure, default(float)),
+                            new TryConvertGenericTest<Uri, Guid>("UriToGuid", TestUri, ConvertResult.Failure, default(Guid)),
+                            new TryConvertGenericTest<Uri, int>("UriToInt", TestUri, ConvertResult.Failure, default(int)),
+                            new TryConvertGenericTest<Uri, long>("UriToLong", TestUri, ConvertResult.Failure, default(long)),
+                            new TryConvertGenericTest<Uri, sbyte>("UriToSByte", TestUri, ConvertResult.Failure, default(sbyte)),
+                            new TryConvertGenericTest<Uri, short>("UriToShort", TestUri, ConvertResult.Failure, default(short)),
+                            new TryConvertGenericTest<Uri, string>("UriToString", TestUri, ConvertResult.Success, TestUriString),
+                            new TryConvertGenericTest<Uri, TimeSpan>("UriToTimeSpan", TestUri, ConvertResult.Failure, default(TimeSpan)),
+                            new TryConvertGenericTest<Uri, Type>("UriToType", TestUri, ConvertResult.Failure, default(Type)),
+                            new TryConvertGenericTest<Uri, uint>("UriToUInt", TestUri, ConvertResult.Failure, default(uint)),
+                            new TryConvertGenericTest<Uri, ulong>("UriToULong", TestUri, ConvertResult.Failure, default(ulong)),
+                            new TryConvertGenericTest<Uri, ushort>("UriToUShort", TestUri, ConvertResult.Failure, default(ushort)),
+                            new TryConvertGenericTest<Uri, Uri>("UriToUri", TestUri, ConvertResult.Success, TestUri),
+
+                            // Nullable Types
+                            new TryConvertGenericTest<Uri, bool?>("UriToNullable<Bool>", TestUri, ConvertResult.Failure, default(bool?)),
+                            new TryConvertGenericTest<Uri, byte?>("UriToNullable<Byte>", TestUri, ConvertResult.Failure, default(byte?)),
+                            new TryConvertGenericTest<Uri, char?>("UriToNullable<Char>", TestUri, ConvertResult.Failure, default(char?)),
+                            new TryConvertGenericTest<Uri, DateTime?>("UriToNullable<DateTime>", TestUri, ConvertResult.Failure, new DateTime?()),
+                            new TryConvertGenericTest<Uri, DateTimeOffset?>("UriToNullable<DateTimeOffset>", TestUri, ConvertResult.Failure, new DateTimeOffset?()),
+                            new TryConvertGenericTest<Uri, decimal?>("UriToNullable<Decimal>", TestUri, ConvertResult.Failure, default(decimal?)),
+                            new TryConvertGenericTest<Uri, double?>("UriToNullable<Double>", TestUri, ConvertResult.Failure, default(double?)),
+                            new TryConvertGenericTest<Uri, PrimaryColor?>("UriToNullable<Enum>", TestUri, ConvertResult.Failure, default(PrimaryColor?)),
+                            new TryConvertGenericTest<Uri, float?>("UriToNullable<Float>", TestUri, ConvertResult.Failure, default(float?)),
+                            new TryConvertGenericTest<Uri, Guid?>("UriToNullable<Guid>", TestUri, ConvertResult.Failure, new Guid?()),
+                            new TryConvertGenericTest<Uri, int?>("UriToNullable<Int>", TestUri, ConvertResult.Failure, default(int?)),
+                            new TryConvertGenericTest<Uri, long?>("UriToNullable<Long>", TestUri, ConvertResult.Failure, default(long?)),
+                            new TryConvertGenericTest<Uri, sbyte?>("UriToNullable<SByte>", TestUri, ConvertResult.Failure, default(sbyte?)),
+                            new TryConvertGenericTest<Uri, short?>("UriToNullable<Short>", TestUri, ConvertResult.Failure, default(short?)),
+                            new TryConvertGenericTest<Uri, TimeSpan?>("UriToNullable<TimeSpan>", TestUri, ConvertResult.Failure, new TimeSpan?()),
+                            new TryConvertGenericTest<Uri, uint?>("UriToNullable<UInt>", TestUri, ConvertResult.Failure, default(uint?)),
+                            new TryConvertGenericTest<Uri, ulong?>("UriToNullable<ULong>", TestUri, ConvertResult.Failure, default(ulong?)),
+                            new TryConvertGenericTest<Uri, ushort?>("UriToNullable<UShort>", TestUri, ConvertResult.Failure, default(ushort?)),
+
+                            // Interface/Class Types
+                            new TryConvertGenericTest<Uri, IInterface>("UriToInterface", TestUri, ConvertResult.Failure, default(IInterface)),
+                            new TryConvertGenericTest<Uri, BaseClass>("UriToBaseClass", TestUri, ConvertResult.Failure, default(BaseClass)),
+                            new TryConvertGenericTest<Uri, DerivedClass>("UriToDerivedClass", TestUri, ConvertResult.Failure, default(DerivedClass)),
+                        }
+                },
+                #endregion
+
+                // Nullable Types ///////////////////////////////////////////
+
+                // Interface/Class Types ////////////////////////////////////
             };
         #endregion
 

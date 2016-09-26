@@ -40,7 +40,8 @@ namespace JsonApiFramework.Converters
             {
                 try
                 {
-                    return definition.Convert(source, context);
+                    var target = definition.Convert(source, context);
+                    return target;
                 }
                 catch (Exception exception)
                 {
@@ -54,7 +55,8 @@ namespace JsonApiFramework.Converters
             TypeConverterException castTypeConverterException;
             try
             {
-                return Cast<TSource, TTarget>(source);
+                var target = Cast<TSource, TTarget>(source);
+                return target;
             }
             catch (Exception exception)
             {
@@ -69,7 +71,8 @@ namespace JsonApiFramework.Converters
             var isTargetTypeEnum = targetType.IsEnum();
             if (isTargetTypeEnum)
             {
-                return ConvertToEnum<TSource, TTarget>(source, context);
+                var target = ConvertToEnum<TSource, TTarget>(source, context);
+                return target;
             }
 
             var isTargetTypeNullable = targetType.IsNullableType();
@@ -78,7 +81,8 @@ namespace JsonApiFramework.Converters
                 var isTargetTypeNullableUnderlyingTypeEnum = Nullable.GetUnderlyingType(targetType).IsEnum();
                 if (isTargetTypeNullableUnderlyingTypeEnum)
                 {
-                    return ConvertToNullableEnum<TSource, TTarget>(source, context);
+                    var target = ConvertToNullableEnum<TSource, TTarget>(source, context);
+                    return target;
                 }
             }
 
@@ -295,7 +299,7 @@ namespace JsonApiFramework.Converters
                 new TypeConverterDefinitionFunc<byte, bool>((s, c) => System.Convert.ToBoolean(s)),
                 new TypeConverterDefinitionFunc<byte, bool?>((s, c) => System.Convert.ToBoolean(s)),
                 new TypeConverterDefinitionFunc<byte, string>((s, c) => System.Convert.ToString(s, c.SafeGetFormatProvider())),
-                new TypeConverterDefinitionFunc<byte[], string>((s, c) => System.Convert.ToBase64String(s)),
+                new TypeConverterDefinitionFunc<byte[], string>((s, c) => s != null ? System.Convert.ToBase64String(s) : null),
                 new TypeConverterDefinitionFunc<char, bool>((s, c) => System.Convert.ToBoolean(s)),
                 new TypeConverterDefinitionFunc<char, bool?>((s, c) => System.Convert.ToBoolean(s)),
                 new TypeConverterDefinitionFunc<char, string>((s, c) => System.Convert.ToString(s, c.SafeGetFormatProvider())),
@@ -328,7 +332,7 @@ namespace JsonApiFramework.Converters
                 new TypeConverterDefinitionFunc<string, bool?>((s, c) => !String.IsNullOrWhiteSpace(s) ? System.Convert.ToBoolean(s, c.SafeGetFormatProvider()) : new bool?()),
                 new TypeConverterDefinitionFunc<string, byte>((s, c) => System.Convert.ToByte(s, c.SafeGetFormatProvider())),
                 new TypeConverterDefinitionFunc<string, byte?>((s, c) => !String.IsNullOrWhiteSpace(s) ? System.Convert.ToByte(s, c.SafeGetFormatProvider()) : new byte?()),
-                new TypeConverterDefinitionFunc<string, byte[]>((s, c) => System.Convert.FromBase64String(s)),
+                new TypeConverterDefinitionFunc<string, byte[]>((s, c) => !String.IsNullOrWhiteSpace(s) ? System.Convert.FromBase64String(s) : null),
                 new TypeConverterDefinitionFunc<string, char>((s, c) => System.Convert.ToChar(s, c.SafeGetFormatProvider())),
                 new TypeConverterDefinitionFunc<string, char?>((s, c) => !String.IsNullOrWhiteSpace(s) ? System.Convert.ToChar(s, c.SafeGetFormatProvider()) : new char?()),
                 new TypeConverterDefinitionFunc<string, DateTime>((s, c) => ConvertStringToNullableDateTime(s, c).GetValueOrDefault()),
@@ -358,9 +362,19 @@ namespace JsonApiFramework.Converters
                 new TypeConverterDefinitionFunc<string, uint?>((s, c) => !String.IsNullOrWhiteSpace(s) ? System.Convert.ToUInt32(s, c.SafeGetFormatProvider()) : new uint?()),
                 new TypeConverterDefinitionFunc<string, ulong>((s, c) => System.Convert.ToUInt64(s, c.SafeGetFormatProvider())),
                 new TypeConverterDefinitionFunc<string, ulong?>((s, c) => !String.IsNullOrWhiteSpace(s) ? System.Convert.ToUInt64(s, c.SafeGetFormatProvider()) : new ulong?()),
-                new TypeConverterDefinitionFunc<string, Uri>((s, c) => new Uri(s, UriKind.RelativeOrAbsolute)),
+                new TypeConverterDefinitionFunc<string, Uri>((s, c) => !String.IsNullOrWhiteSpace(s) ? new Uri(s, UriKind.RelativeOrAbsolute) : null),
                 new TypeConverterDefinitionFunc<string, ushort>((s, c) => System.Convert.ToUInt16(s, c.SafeGetFormatProvider())),
-                new TypeConverterDefinitionFunc<string, ushort?>((s, c) => !String.IsNullOrWhiteSpace(s) ? System.Convert.ToUInt16(s, c.SafeGetFormatProvider()) : new ushort?())
+                new TypeConverterDefinitionFunc<string, ushort?>((s, c) => !String.IsNullOrWhiteSpace(s) ? System.Convert.ToUInt16(s, c.SafeGetFormatProvider()) : new ushort?()),
+                new TypeConverterDefinitionFunc<uint, bool>((s, c) => System.Convert.ToBoolean(s)),
+                new TypeConverterDefinitionFunc<uint, bool?>((s, c) => System.Convert.ToBoolean(s)),
+                new TypeConverterDefinitionFunc<uint, string>((s, c) => System.Convert.ToString(s, c.SafeGetFormatProvider())),
+                new TypeConverterDefinitionFunc<ulong, bool>((s, c) => System.Convert.ToBoolean(s)),
+                new TypeConverterDefinitionFunc<ulong, bool?>((s, c) => System.Convert.ToBoolean(s)),
+                new TypeConverterDefinitionFunc<ulong, string>((s, c) => System.Convert.ToString(s, c.SafeGetFormatProvider())),
+                new TypeConverterDefinitionFunc<ushort, bool>((s, c) => System.Convert.ToBoolean(s)),
+                new TypeConverterDefinitionFunc<ushort, bool?>((s, c) => System.Convert.ToBoolean(s)),
+                new TypeConverterDefinitionFunc<ushort, string>((s, c) => System.Convert.ToString(s, c.SafeGetFormatProvider())),
+                new TypeConverterDefinitionFunc<Uri, string>((s, c) => s != null ? s.ToString() : null),
             };
         #endregion
 
@@ -394,7 +408,7 @@ namespace JsonApiFramework.Converters
                 private static Func<TSource, TTarget> CreateCastImpl()
                 {
                     var parameterExpression = Expression.Parameter(typeof(TSource));
-                    var convertExpression = Expression.ConvertChecked(parameterExpression, typeof(TTarget));
+                    var convertExpression = Expression.Convert(parameterExpression, typeof(TTarget));
                     var convertLambda = Expression
                         .Lambda<Func<TSource, TTarget>>(convertExpression, parameterExpression)
                         .Compile();

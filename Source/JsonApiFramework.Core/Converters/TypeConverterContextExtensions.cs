@@ -20,7 +20,12 @@ namespace JsonApiFramework.Converters
         { return context != null ? context.FormatProvider : null; }
 
         public static DateTimeStyles SafeGetDateTimeStyles(this TypeConverterContext context)
-        { return context != null ? context.DateTimeStyles : DateTimeStyles.None; }
+        { return context != null ? context.DateTimeStyles : DefaultDateTimeStyles; }
+        #endregion
+
+        // PRIVATE FIELDS ///////////////////////////////////////////////////
+        #region Constants
+        private const DateTimeStyles DefaultDateTimeStyles = DateTimeStyles.RoundtripKind;
         #endregion
     }
 }
