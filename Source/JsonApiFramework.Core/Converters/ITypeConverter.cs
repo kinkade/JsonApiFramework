@@ -10,7 +10,7 @@ namespace JsonApiFramework.Converters
     {
         // PUBLIC METHODS ///////////////////////////////////////////////////
         #region Methods
-        bool TryConvert<TSource, TTarget>(TSource source, TypeConverterContext context, out TTarget target);
+        TTarget Convert<TSource, TTarget>(TSource source, TypeConverterContext context);
         #endregion
     }
 }

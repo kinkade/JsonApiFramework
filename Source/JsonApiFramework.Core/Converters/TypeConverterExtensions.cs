@@ -13,26 +13,6 @@ namespace JsonApiFramework.Converters
     {
         // PUBLIC METHODS ///////////////////////////////////////////////////
         #region Extensions Methods
-        public static TTarget Convert<TSource, TTarget>(this ITypeConverter typeConverter, TSource source, TypeConverterContext context)
-        {
-            Contract.Requires(typeConverter != null);
-
-            try
-            {
-                TTarget target;
-                if (typeConverter.TryConvert(source, context, out target))
-                {
-                    return target;
-                }
-            }
-            catch (Exception exception)
-            {
-                throw TypeConverterException.Create<TSource, TTarget>(source, exception);
-            }
-
-            throw TypeConverterException.Create<TSource, TTarget>(source);
-        }
-
         public static TTarget Convert<TSource, TTarget>(this ITypeConverter typeConverter, TSource source)
         {
             Contract.Requires(typeConverter != null);
@@ -40,11 +20,36 @@ namespace JsonApiFramework.Converters
             return typeConverter.Convert<TSource, TTarget>(source, null);
         }
 
+        public static bool TryConvert<TSource, TTarget>(this ITypeConverter typeConverter, TSource source, TypeConverterContext context, out TTarget target)
+        {
+            Contract.Requires(typeConverter != null);
+
+            try
+            {
+                target = typeConverter.Convert<TSource, TTarget>(source, context);
+                return true;
+            }
+            catch (Exception)
+            {
+                target = default(TTarget);
+                return false;
+            }
+        }
+
         public static bool TryConvert<TSource, TTarget>(this ITypeConverter typeConverter, TSource source, out TTarget target)
         {
             Contract.Requires(typeConverter != null);
 
-            return typeConverter.TryConvert(source, null, out target);
+            try
+            {
+                target = typeConverter.Convert<TSource, TTarget>(source, null);
+                return true;
+            }
+            catch (Exception)
+            {
+                target = default(TTarget);
+                return false;
+            }
         }
         #endregion
     }

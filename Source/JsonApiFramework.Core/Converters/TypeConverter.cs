@@ -31,30 +31,60 @@ namespace JsonApiFramework.Converters
 
         // PUBLIC METHODS ///////////////////////////////////////////////////
         #region Convert Methods
-        public bool TryConvert<TSource, TTarget>(TSource source, TypeConverterContext context, out TTarget target)
+        public TTarget Convert<TSource, TTarget>(TSource source, TypeConverterContext context)
         {
-            // Handle when there exists a valid cast between source and
-            // target types.
-            var castResult = CastTo<TTarget>.TryFrom(source, out target);
-            if (castResult)
-                return true;
-
-            // Handle when there exists a type converter definition between
-            // source and target types.
+            // Try convert with a type converter definition if possible.
+            // If there is a type converter definition, convert and do not try any further.
             ITypeConverterDefinition<TSource, TTarget> definition;
             if (this.TryGetTypeConverterDefinition(out definition))
             {
-                var definitionConvertResult = TryConvertWithTypeConverterDefinition(definition, source, context, out target);
-                if (definitionConvertResult)
-                    return true;
+                try
+                {
+                    return definition.Convert(source, context);
+                }
+                catch (Exception exception)
+                {
+                    var definitionTypeConverterException = TypeConverterException.Create<TSource, TTarget>(source, exception);
+                    throw definitionTypeConverterException;
+                }
             }
 
-            // Handle when target type is an Enum.
-            if (TryConvertToEnum(source, context, out target))
-                return true;
+            // Try direct cast.
+            // If an exception fires, hold off until other special cases of conversion are tried if available.
+            TypeConverterException castTypeConverterException;
+            try
+            {
+                return Cast<TSource, TTarget>(source);
+            }
+            catch (Exception exception)
+            {
+                castTypeConverterException = TypeConverterException.Create<TSource, TTarget>(source, exception);
+            }
 
-            // If we get here, unable to convert between types.
-            return false;
+            // Try direct conversion for special cases:
+            // 1. Enumerations
+            var targetType = typeof(TTarget);
+
+            // .. Enumerations
+            var isTargetTypeEnum = targetType.IsEnum();
+            if (isTargetTypeEnum)
+            {
+                return ConvertToEnum<TSource, TTarget>(source, context);
+            }
+
+            var isTargetTypeNullable = targetType.IsNullableType();
+            if (isTargetTypeNullable)
+            {
+                var isTargetTypeNullableUnderlyingTypeEnum = Nullable.GetUnderlyingType(targetType).IsEnum();
+                if (isTargetTypeNullableUnderlyingTypeEnum)
+                {
+                    return ConvertToNullableEnum<TSource, TTarget>(source, context);
+                }
+            }
+
+            // Error in convert between source and target types, throw direct
+            // cast exception as all special cases have been exhausted.
+            throw castTypeConverterException;
         }
         #endregion
 
@@ -64,90 +94,66 @@ namespace JsonApiFramework.Converters
         #endregion
 
         // PRIVATE METHODS //////////////////////////////////////////////////
-        #region Special Case Methods
-        private static string ConvertDateTimeToString(DateTime dateTime, TypeConverterContext context)
+        #region Convert Implementation Methods
+        private static TTarget Cast<TSource, TTarget>(TSource source)
         {
-            return String.IsNullOrWhiteSpace(context.SafeGetFormat())
-                ? dateTime.ToString("O")
-                : dateTime.ToString(context.SafeGetFormat(), context.SafeGetFormatProvider());
+            return CastTo<TTarget>.From(source);
         }
 
-        private static string ConvertDateTimeOffsetToString(DateTimeOffset dateTimeOffset, TypeConverterContext context)
+        private TTarget ConvertToEnum<TSource, TTarget>(TSource source, TypeConverterContext context)
         {
-            return String.IsNullOrWhiteSpace(context.SafeGetFormat())
-                ? dateTimeOffset.ToString("O")
-                : dateTimeOffset.ToString(context.SafeGetFormat(), context.SafeGetFormatProvider());
-        }
-
-        private static DateTime? ConvertStringToNullableDateTime(string str, TypeConverterContext context)
-        {
-            if (String.IsNullOrWhiteSpace(str))
-                return new DateTime?();
-
-            return String.IsNullOrWhiteSpace(context.SafeGetFormat())
-                ? DateTime.Parse(str, context.SafeGetFormatProvider(), context.SafeGetDateTimeStyles())
-                : DateTime.ParseExact(str, context.SafeGetFormat(), context.SafeGetFormatProvider(), context.SafeGetDateTimeStyles());
-        }
-
-        private static DateTimeOffset? ConvertStringToNullableDateTimeOffset(string str, TypeConverterContext context)
-        {
-            if (String.IsNullOrWhiteSpace(str))
-                return new DateTimeOffset?();
-
-            return String.IsNullOrWhiteSpace(context.SafeGetFormat())
-                ? DateTimeOffset.Parse(str, context.SafeGetFormatProvider(), context.SafeGetDateTimeStyles())
-                : DateTimeOffset.ParseExact(str, context.SafeGetFormat(), context.SafeGetFormatProvider(), context.SafeGetDateTimeStyles());
-        }
-
-        private static Guid? ConvertStringToNullableGuid(string str, TypeConverterContext context)
-        {
-            if (String.IsNullOrWhiteSpace(str))
-                return new Guid?();
-
-            return String.IsNullOrWhiteSpace(context.SafeGetFormat())
-                ? Guid.Parse(str)
-                : Guid.ParseExact(str, context.SafeGetFormat());
-        }
-
-        private static TimeSpan? ConvertStringToNullableTimeSpan(string str, TypeConverterContext context)
-        {
-            if (String.IsNullOrWhiteSpace(str))
-                return new TimeSpan?();
-
-            return String.IsNullOrWhiteSpace(context.SafeGetFormat())
-                ? TimeSpan.Parse(str, context.SafeGetFormatProvider())
-                : TimeSpan.ParseExact(str, context.SafeGetFormat(), context.SafeGetFormatProvider());
-        }
-
-        private bool TryConvertToEnum<TSource, TTarget>(TSource source, TypeConverterContext context, out TTarget target)
-        {
-            target = default(TTarget);
-
-            // If target is not an enumeration type and not a nullable type,
-            // then nothing to do for this method.
-            var targetType = typeof(TTarget);
-            var isTargetTypeEnum = targetType.IsEnum();
-            var isTargetTypeNullableEnum = targetType.IsNullableType() && Nullable.GetUnderlyingType(targetType).IsEnum();
-            if (!isTargetTypeEnum && !isTargetTypeNullableEnum)
-                return false;
-
             // Handle when source type can be converted to an integer.
             int sourceAsInt;
-            if (this.TryConvert(source, out sourceAsInt))
+            if (this.TryConvert(source, context, out sourceAsInt))
             {
                 // Casting from an integer to an enumeration always works.
-                target = CastTo<TTarget>.From(sourceAsInt);
-                return true;
+                return CastTo<TTarget>.From(sourceAsInt);
             }
 
             // Handle when source type is a string.
             if (typeof(TSource).IsString())
             {
                 var sourceAsString = CastTo<string>.From(source);
-                return EnumTryParse<TTarget>.From(sourceAsString, out target);
+
+                TTarget target;
+                if (EnumTryParse<TTarget>.From(sourceAsString, out target))
+                    return target;
             }
 
-            return false;
+            // Unable to convert source type to an enumeration.
+            var typeConverterException = TypeConverterException.Create<TSource, TTarget>(source);
+            throw typeConverterException;
+        }
+
+        private TTarget ConvertToNullableEnum<TSource, TTarget>(TSource source, TypeConverterContext context)
+        {
+            // Handle when source type is a string and null or empty.
+            var isSourceString = typeof(TSource).IsString();
+            var sourceAsString = isSourceString ? CastTo<string>.From(source) : null;
+            if (isSourceString && String.IsNullOrWhiteSpace(sourceAsString))
+            {
+                return New<TTarget>.FromDefaultConstructor();
+            }
+
+            // Handle when source type can be converted to an integer.
+            int sourceAsInt;
+            if (this.TryConvert(source, context, out sourceAsInt))
+            {
+                // Casting from an integer to an enumeration always works.
+                return CastTo<TTarget>.From(sourceAsInt);
+            }
+
+            // Handle when source type is a string.
+            if (isSourceString)
+            {
+                TTarget target;
+                if (TypeConverterNullableEnumTryParse<TTarget>.From(sourceAsString, out target))
+                    return target;
+            }
+
+            // Unable to convert source type to an enumeration.
+            var typeConverterException = TypeConverterException.Create<TSource, TTarget>(source);
+            throw typeConverterException;
         }
         #endregion
 
@@ -205,21 +211,77 @@ namespace JsonApiFramework.Converters
             definition = (ITypeConverterDefinition<TSource, TTarget>)value;
             return true;
         }
+        #endregion
 
-        private static bool TryConvertWithTypeConverterDefinition<TSource, TTarget>(ITypeConverterDefinition<TSource, TTarget> definition, TSource source, TypeConverterContext context, out TTarget target)
+        #region TypeConverterDefinitionFunc Implementation Methods
+        private static string ConvertDateTimeToString(DateTime dateTime, TypeConverterContext context)
         {
-            Contract.Requires(definition != null);
+            return String.IsNullOrWhiteSpace(context.SafeGetFormat())
+                ? dateTime.ToString("O")
+                : dateTime.ToString(context.SafeGetFormat(), context.SafeGetFormatProvider());
+        }
 
-            try
+        private static string ConvertDateTimeOffsetToString(DateTimeOffset dateTimeOffset, TypeConverterContext context)
+        {
+            return String.IsNullOrWhiteSpace(context.SafeGetFormat())
+                ? dateTimeOffset.ToString("O")
+                : dateTimeOffset.ToString(context.SafeGetFormat(), context.SafeGetFormatProvider());
+        }
+
+        private static DateTime? ConvertStringToNullableDateTime(string str, TypeConverterContext context)
+        {
+            if (String.IsNullOrWhiteSpace(str))
+                return new DateTime?();
+
+            return String.IsNullOrWhiteSpace(context.SafeGetFormat())
+                ? DateTime.Parse(str, context.SafeGetFormatProvider(), context.SafeGetDateTimeStyles())
+                : DateTime.ParseExact(str, context.SafeGetFormat(), context.SafeGetFormatProvider(), context.SafeGetDateTimeStyles());
+        }
+
+        private static DateTimeOffset? ConvertStringToNullableDateTimeOffset(string str, TypeConverterContext context)
+        {
+            if (String.IsNullOrWhiteSpace(str))
+                return new DateTimeOffset?();
+
+            return String.IsNullOrWhiteSpace(context.SafeGetFormat())
+                ? DateTimeOffset.Parse(str, context.SafeGetFormatProvider(), context.SafeGetDateTimeStyles())
+                : DateTimeOffset.ParseExact(str, context.SafeGetFormat(), context.SafeGetFormatProvider(), context.SafeGetDateTimeStyles());
+        }
+
+        private static Guid? ConvertStringToNullableGuid(string str, TypeConverterContext context)
+        {
+            if (String.IsNullOrWhiteSpace(str))
+                return new Guid?();
+
+            return String.IsNullOrWhiteSpace(context.SafeGetFormat())
+                ? Guid.Parse(str)
+                : Guid.ParseExact(str, context.SafeGetFormat());
+        }
+
+        private static TimeSpan? ConvertStringToNullableTimeSpan(string str, TypeConverterContext context)
+        {
+            if (String.IsNullOrWhiteSpace(str))
+                return new TimeSpan?();
+
+            return String.IsNullOrWhiteSpace(context.SafeGetFormat())
+                ? TimeSpan.Parse(str, context.SafeGetFormatProvider())
+                : TimeSpan.ParseExact(str, context.SafeGetFormat(), context.SafeGetFormatProvider());
+        }
+        #endregion
+
+        #region Enumeration Methods
+        private static bool NullableEnumTryParse<T>(string value, bool ignoreCase, out T? result)
+            where T : struct
+        {
+            T enumeration;
+            if (Enum.TryParse(value, ignoreCase, out enumeration))
             {
-                var result = definition.TryConvert(source, context, out target);
-                return result;
+                result = enumeration;
+                return true;
             }
-            catch (Exception)
-            {
-                target = default(TTarget);
-                return false;
-            }
+
+            result = null;
+            return false;
         }
         #endregion
 
@@ -227,88 +289,88 @@ namespace JsonApiFramework.Converters
         #region Fields
         private static readonly ITypeConverterDefinition[] DefaultDefinitions =
             {
-                new TypeConverterDefinitionFunc<bool, decimal>((s, c) => Convert.ToDecimal(s)),
-                new TypeConverterDefinitionFunc<bool, decimal?>((s, c) => Convert.ToDecimal(s)),
-                new TypeConverterDefinitionFunc<bool, string>((s, c) => Convert.ToString(s, c.SafeGetFormatProvider())),
-                new TypeConverterDefinitionFunc<byte, bool>((s, c) => Convert.ToBoolean(s)),
-                new TypeConverterDefinitionFunc<byte, bool?>((s, c) => Convert.ToBoolean(s)),
-                new TypeConverterDefinitionFunc<byte, string>((s, c) => Convert.ToString(s, c.SafeGetFormatProvider())),
-                new TypeConverterDefinitionFunc<byte[], string>((s, c) => Convert.ToBase64String(s)),
-                new TypeConverterDefinitionFunc<char, bool>((s, c) => Convert.ToBoolean(s)),
-                new TypeConverterDefinitionFunc<char, bool?>((s, c) => Convert.ToBoolean(s)),
-                new TypeConverterDefinitionFunc<char, string>((s, c) => Convert.ToString(s, c.SafeGetFormatProvider())),
+                new TypeConverterDefinitionFunc<bool, decimal>((s, c) => System.Convert.ToDecimal(s)),
+                new TypeConverterDefinitionFunc<bool, decimal?>((s, c) => System.Convert.ToDecimal(s)),
+                new TypeConverterDefinitionFunc<bool, string>((s, c) => System.Convert.ToString(s, c.SafeGetFormatProvider())),
+                new TypeConverterDefinitionFunc<byte, bool>((s, c) => System.Convert.ToBoolean(s)),
+                new TypeConverterDefinitionFunc<byte, bool?>((s, c) => System.Convert.ToBoolean(s)),
+                new TypeConverterDefinitionFunc<byte, string>((s, c) => System.Convert.ToString(s, c.SafeGetFormatProvider())),
+                new TypeConverterDefinitionFunc<byte[], string>((s, c) => System.Convert.ToBase64String(s)),
+                new TypeConverterDefinitionFunc<char, bool>((s, c) => System.Convert.ToBoolean(s)),
+                new TypeConverterDefinitionFunc<char, bool?>((s, c) => System.Convert.ToBoolean(s)),
+                new TypeConverterDefinitionFunc<char, string>((s, c) => System.Convert.ToString(s, c.SafeGetFormatProvider())),
                 new TypeConverterDefinitionFunc<DateTime, string>(ConvertDateTimeToString),
                 new TypeConverterDefinitionFunc<DateTimeOffset, DateTime>((s, c) => s.DateTime),
                 new TypeConverterDefinitionFunc<DateTimeOffset, DateTime?>((s, c) => s.DateTime),
                 new TypeConverterDefinitionFunc<DateTimeOffset, string>(ConvertDateTimeOffsetToString),
-                new TypeConverterDefinitionFunc<decimal, bool>((s, c) => Convert.ToBoolean(s)),
-                new TypeConverterDefinitionFunc<decimal, bool?>((s, c) => Convert.ToBoolean(s)),
-                new TypeConverterDefinitionFunc<decimal, string>((s, c) => Convert.ToString(s, c.SafeGetFormatProvider())),
-                new TypeConverterDefinitionFunc<double, bool>((s, c) => Convert.ToBoolean(s)),
-                new TypeConverterDefinitionFunc<double, bool?>((s, c) => Convert.ToBoolean(s)),
-                new TypeConverterDefinitionFunc<double, string>((s, c) => Convert.ToString(s, c.SafeGetFormatProvider())),
-                new TypeConverterDefinitionFunc<float, bool>((s, c) => Convert.ToBoolean(s)),
-                new TypeConverterDefinitionFunc<float, bool?>((s, c) => Convert.ToBoolean(s)),
-                new TypeConverterDefinitionFunc<float, string>((s, c) => Convert.ToString(s, c.SafeGetFormatProvider())),
-                new TypeConverterDefinitionFunc<int, bool>((s, c) => Convert.ToBoolean(s)),
-                new TypeConverterDefinitionFunc<int, bool?>((s, c) => Convert.ToBoolean(s)),
-                new TypeConverterDefinitionFunc<int, string>((s, c) => Convert.ToString(s, c.SafeGetFormatProvider())),
-                new TypeConverterDefinitionFunc<long, bool>((s, c) => Convert.ToBoolean(s)),
-                new TypeConverterDefinitionFunc<long, bool?>((s, c) => Convert.ToBoolean(s)),
-                new TypeConverterDefinitionFunc<long, string>((s, c) => Convert.ToString(s, c.SafeGetFormatProvider())),
-                new TypeConverterDefinitionFunc<sbyte, bool>((s, c) => Convert.ToBoolean(s)),
-                new TypeConverterDefinitionFunc<sbyte, bool?>((s, c) => Convert.ToBoolean(s)),
-                new TypeConverterDefinitionFunc<sbyte, string>((s, c) => Convert.ToString(s, c.SafeGetFormatProvider())),
-                new TypeConverterDefinitionFunc<short, bool>((s, c) => Convert.ToBoolean(s)),
-                new TypeConverterDefinitionFunc<short, bool?>((s, c) => Convert.ToBoolean(s)),
-                new TypeConverterDefinitionFunc<short, string>((s, c) => Convert.ToString(s, c.SafeGetFormatProvider())),
-                new TypeConverterDefinitionFunc<string, bool>((s, c) => Convert.ToBoolean(s, c.SafeGetFormatProvider())),
-                new TypeConverterDefinitionFunc<string, bool?>((s, c) => !String.IsNullOrWhiteSpace(s) ? Convert.ToBoolean(s, c.SafeGetFormatProvider()) : new bool?()),
-                new TypeConverterDefinitionFunc<string, byte>((s, c) => Convert.ToByte(s, c.SafeGetFormatProvider())),
-                new TypeConverterDefinitionFunc<string, byte?>((s, c) => !String.IsNullOrWhiteSpace(s) ? Convert.ToByte(s, c.SafeGetFormatProvider()) : new byte?()),
-                new TypeConverterDefinitionFunc<string, byte[]>((s, c) => Convert.FromBase64String(s)),
-                new TypeConverterDefinitionFunc<string, char>((s, c) => Convert.ToChar(s, c.SafeGetFormatProvider())),
-                new TypeConverterDefinitionFunc<string, char?>((s, c) => !String.IsNullOrWhiteSpace(s) ? Convert.ToChar(s, c.SafeGetFormatProvider()) : new char?()),
+                new TypeConverterDefinitionFunc<decimal, bool>((s, c) => System.Convert.ToBoolean(s)),
+                new TypeConverterDefinitionFunc<decimal, bool?>((s, c) => System.Convert.ToBoolean(s)),
+                new TypeConverterDefinitionFunc<decimal, string>((s, c) => System.Convert.ToString(s, c.SafeGetFormatProvider())),
+                new TypeConverterDefinitionFunc<double, bool>((s, c) => System.Convert.ToBoolean(s)),
+                new TypeConverterDefinitionFunc<double, bool?>((s, c) => System.Convert.ToBoolean(s)),
+                new TypeConverterDefinitionFunc<double, string>((s, c) => System.Convert.ToString(s, c.SafeGetFormatProvider())),
+                new TypeConverterDefinitionFunc<float, bool>((s, c) => System.Convert.ToBoolean(s)),
+                new TypeConverterDefinitionFunc<float, bool?>((s, c) => System.Convert.ToBoolean(s)),
+                new TypeConverterDefinitionFunc<float, string>((s, c) => System.Convert.ToString(s, c.SafeGetFormatProvider())),
+                new TypeConverterDefinitionFunc<int, bool>((s, c) => System.Convert.ToBoolean(s)),
+                new TypeConverterDefinitionFunc<int, bool?>((s, c) => System.Convert.ToBoolean(s)),
+                new TypeConverterDefinitionFunc<int, string>((s, c) => System.Convert.ToString(s, c.SafeGetFormatProvider())),
+                new TypeConverterDefinitionFunc<long, bool>((s, c) => System.Convert.ToBoolean(s)),
+                new TypeConverterDefinitionFunc<long, bool?>((s, c) => System.Convert.ToBoolean(s)),
+                new TypeConverterDefinitionFunc<long, string>((s, c) => System.Convert.ToString(s, c.SafeGetFormatProvider())),
+                new TypeConverterDefinitionFunc<sbyte, bool>((s, c) => System.Convert.ToBoolean(s)),
+                new TypeConverterDefinitionFunc<sbyte, bool?>((s, c) => System.Convert.ToBoolean(s)),
+                new TypeConverterDefinitionFunc<sbyte, string>((s, c) => System.Convert.ToString(s, c.SafeGetFormatProvider())),
+                new TypeConverterDefinitionFunc<short, bool>((s, c) => System.Convert.ToBoolean(s)),
+                new TypeConverterDefinitionFunc<short, bool?>((s, c) => System.Convert.ToBoolean(s)),
+                new TypeConverterDefinitionFunc<short, string>((s, c) => System.Convert.ToString(s, c.SafeGetFormatProvider())),
+                new TypeConverterDefinitionFunc<string, bool>((s, c) => System.Convert.ToBoolean(s, c.SafeGetFormatProvider())),
+                new TypeConverterDefinitionFunc<string, bool?>((s, c) => !String.IsNullOrWhiteSpace(s) ? System.Convert.ToBoolean(s, c.SafeGetFormatProvider()) : new bool?()),
+                new TypeConverterDefinitionFunc<string, byte>((s, c) => System.Convert.ToByte(s, c.SafeGetFormatProvider())),
+                new TypeConverterDefinitionFunc<string, byte?>((s, c) => !String.IsNullOrWhiteSpace(s) ? System.Convert.ToByte(s, c.SafeGetFormatProvider()) : new byte?()),
+                new TypeConverterDefinitionFunc<string, byte[]>((s, c) => System.Convert.FromBase64String(s)),
+                new TypeConverterDefinitionFunc<string, char>((s, c) => System.Convert.ToChar(s, c.SafeGetFormatProvider())),
+                new TypeConverterDefinitionFunc<string, char?>((s, c) => !String.IsNullOrWhiteSpace(s) ? System.Convert.ToChar(s, c.SafeGetFormatProvider()) : new char?()),
                 new TypeConverterDefinitionFunc<string, DateTime>((s, c) => ConvertStringToNullableDateTime(s, c).GetValueOrDefault()),
                 new TypeConverterDefinitionFunc<string, DateTime?>(ConvertStringToNullableDateTime),
                 new TypeConverterDefinitionFunc<string, DateTimeOffset>((s, c) => ConvertStringToNullableDateTimeOffset(s, c).GetValueOrDefault()),
                 new TypeConverterDefinitionFunc<string, DateTimeOffset?>(ConvertStringToNullableDateTimeOffset),
-                new TypeConverterDefinitionFunc<string, decimal>((s, c) => Convert.ToDecimal(s, c.SafeGetFormatProvider())),
-                new TypeConverterDefinitionFunc<string, decimal?>((s, c) => !String.IsNullOrWhiteSpace(s) ? Convert.ToDecimal(s, c.SafeGetFormatProvider()) : new decimal?()),
-                new TypeConverterDefinitionFunc<string, double>((s, c) => Convert.ToDouble(s, c.SafeGetFormatProvider())),
-                new TypeConverterDefinitionFunc<string, double?>((s, c) => !String.IsNullOrWhiteSpace(s) ? Convert.ToDouble(s, c.SafeGetFormatProvider()) : new double?()),
-                new TypeConverterDefinitionFunc<string, float>((s, c) => Convert.ToSingle(s, c.SafeGetFormatProvider())),
-                new TypeConverterDefinitionFunc<string, float?>((s, c) => !String.IsNullOrWhiteSpace(s) ? Convert.ToSingle(s, c.SafeGetFormatProvider()) : new float?()),
+                new TypeConverterDefinitionFunc<string, decimal>((s, c) => System.Convert.ToDecimal(s, c.SafeGetFormatProvider())),
+                new TypeConverterDefinitionFunc<string, decimal?>((s, c) => !String.IsNullOrWhiteSpace(s) ? System.Convert.ToDecimal(s, c.SafeGetFormatProvider()) : new decimal?()),
+                new TypeConverterDefinitionFunc<string, double>((s, c) => System.Convert.ToDouble(s, c.SafeGetFormatProvider())),
+                new TypeConverterDefinitionFunc<string, double?>((s, c) => !String.IsNullOrWhiteSpace(s) ? System.Convert.ToDouble(s, c.SafeGetFormatProvider()) : new double?()),
+                new TypeConverterDefinitionFunc<string, float>((s, c) => System.Convert.ToSingle(s, c.SafeGetFormatProvider())),
+                new TypeConverterDefinitionFunc<string, float?>((s, c) => !String.IsNullOrWhiteSpace(s) ? System.Convert.ToSingle(s, c.SafeGetFormatProvider()) : new float?()),
                 new TypeConverterDefinitionFunc<string, Guid>((s, c) => ConvertStringToNullableGuid(s, c).GetValueOrDefault()),
                 new TypeConverterDefinitionFunc<string, Guid?>(ConvertStringToNullableGuid),
-                new TypeConverterDefinitionFunc<string, int>((s, c) => Convert.ToInt32(s, c.SafeGetFormatProvider())),
-                new TypeConverterDefinitionFunc<string, int?>((s, c) => !String.IsNullOrWhiteSpace(s) ? Convert.ToInt32(s, c.SafeGetFormatProvider()) : new int?()),
-                new TypeConverterDefinitionFunc<string, long>((s, c) => Convert.ToInt64(s, c.SafeGetFormatProvider())),
-                new TypeConverterDefinitionFunc<string, long?>((s, c) => !String.IsNullOrWhiteSpace(s) ? Convert.ToInt64(s, c.SafeGetFormatProvider()) : new long?()),
-                new TypeConverterDefinitionFunc<string, sbyte>((s, c) => Convert.ToSByte(s, c.SafeGetFormatProvider())),
-                new TypeConverterDefinitionFunc<string, sbyte?>((s, c) => !String.IsNullOrWhiteSpace(s) ? Convert.ToSByte(s, c.SafeGetFormatProvider()) : new sbyte?()),
-                new TypeConverterDefinitionFunc<string, short>((s, c) => Convert.ToInt16(s, c.SafeGetFormatProvider())),
-                new TypeConverterDefinitionFunc<string, short?>((s, c) => !String.IsNullOrWhiteSpace(s) ? Convert.ToInt16(s, c.SafeGetFormatProvider()) : new short?()),
+                new TypeConverterDefinitionFunc<string, int>((s, c) => System.Convert.ToInt32(s, c.SafeGetFormatProvider())),
+                new TypeConverterDefinitionFunc<string, int?>((s, c) => !String.IsNullOrWhiteSpace(s) ? System.Convert.ToInt32(s, c.SafeGetFormatProvider()) : new int?()),
+                new TypeConverterDefinitionFunc<string, long>((s, c) => System.Convert.ToInt64(s, c.SafeGetFormatProvider())),
+                new TypeConverterDefinitionFunc<string, long?>((s, c) => !String.IsNullOrWhiteSpace(s) ? System.Convert.ToInt64(s, c.SafeGetFormatProvider()) : new long?()),
+                new TypeConverterDefinitionFunc<string, sbyte>((s, c) => System.Convert.ToSByte(s, c.SafeGetFormatProvider())),
+                new TypeConverterDefinitionFunc<string, sbyte?>((s, c) => !String.IsNullOrWhiteSpace(s) ? System.Convert.ToSByte(s, c.SafeGetFormatProvider()) : new sbyte?()),
+                new TypeConverterDefinitionFunc<string, short>((s, c) => System.Convert.ToInt16(s, c.SafeGetFormatProvider())),
+                new TypeConverterDefinitionFunc<string, short?>((s, c) => !String.IsNullOrWhiteSpace(s) ? System.Convert.ToInt16(s, c.SafeGetFormatProvider()) : new short?()),
                 new TypeConverterDefinitionFunc<string, TimeSpan>((s, c) => ConvertStringToNullableTimeSpan(s, c).GetValueOrDefault()),
                 new TypeConverterDefinitionFunc<string, TimeSpan?>(ConvertStringToNullableTimeSpan),
                 new TypeConverterDefinitionFunc<string, Type>((s, c) => Type.GetType(s, true)),
-                new TypeConverterDefinitionFunc<string, uint>((s, c) => Convert.ToUInt32(s, c.SafeGetFormatProvider())),
-                new TypeConverterDefinitionFunc<string, uint?>((s, c) => !String.IsNullOrWhiteSpace(s) ? Convert.ToUInt32(s, c.SafeGetFormatProvider()) : new uint?()),
-                new TypeConverterDefinitionFunc<string, ulong>((s, c) => Convert.ToUInt64(s, c.SafeGetFormatProvider())),
-                new TypeConverterDefinitionFunc<string, ulong?>((s, c) => !String.IsNullOrWhiteSpace(s) ? Convert.ToUInt64(s, c.SafeGetFormatProvider()) : new ulong?()),
+                new TypeConverterDefinitionFunc<string, uint>((s, c) => System.Convert.ToUInt32(s, c.SafeGetFormatProvider())),
+                new TypeConverterDefinitionFunc<string, uint?>((s, c) => !String.IsNullOrWhiteSpace(s) ? System.Convert.ToUInt32(s, c.SafeGetFormatProvider()) : new uint?()),
+                new TypeConverterDefinitionFunc<string, ulong>((s, c) => System.Convert.ToUInt64(s, c.SafeGetFormatProvider())),
+                new TypeConverterDefinitionFunc<string, ulong?>((s, c) => !String.IsNullOrWhiteSpace(s) ? System.Convert.ToUInt64(s, c.SafeGetFormatProvider()) : new ulong?()),
                 new TypeConverterDefinitionFunc<string, Uri>((s, c) => new Uri(s, UriKind.RelativeOrAbsolute)),
-                new TypeConverterDefinitionFunc<string, ushort>((s, c) => Convert.ToUInt16(s, c.SafeGetFormatProvider())),
-                new TypeConverterDefinitionFunc<string, ushort?>((s, c) => !String.IsNullOrWhiteSpace(s) ? Convert.ToUInt16(s, c.SafeGetFormatProvider()) : new ushort?()),
+                new TypeConverterDefinitionFunc<string, ushort>((s, c) => System.Convert.ToUInt16(s, c.SafeGetFormatProvider())),
+                new TypeConverterDefinitionFunc<string, ushort?>((s, c) => !String.IsNullOrWhiteSpace(s) ? System.Convert.ToUInt16(s, c.SafeGetFormatProvider()) : new ushort?())
             };
         #endregion
 
         // PRIVATE TYPES ////////////////////////////////////////////////////
         #region Types
         /// <summary>
-        /// Returns dynamically built lamdas (cached) to cast between types.
+        /// Returns dynamically built lambdas (cached) to cast between types.
         /// </summary>
         /// <notes>
-        /// Avoids unecessary boxing/unboxing for value types.
+        /// Avoids unnecessary boxing/unboxing for value types.
         /// </notes>
         private static class CastTo<TTarget>
         {
@@ -317,20 +379,6 @@ namespace JsonApiFramework.Converters
             public static TTarget From<TSource>(TSource source)
             {
                 return Cache<TSource>.CastImpl(source);
-            }
-
-            public static bool TryFrom<TSource>(TSource source, out TTarget target)
-            {
-                try
-                {
-                    target = Cache<TSource>.CastImpl(source);
-                    return true;
-                }
-                catch (Exception)
-                {
-                    target = default(TTarget);
-                    return false;
-                }
             }
             #endregion
 
@@ -359,6 +407,9 @@ namespace JsonApiFramework.Converters
 
         private delegate bool EnumTryParseDelegate<TTarget>(string source, out TTarget target);
 
+        /// <summary>
+        /// Returns dynamically built lambdas (cached) to call Enum.TryParse method.
+        /// </summary>
         private static class EnumTryParse<TTarget>
         {
             // PUBLIC METHODS ///////////////////////////////////////////////
@@ -390,23 +441,116 @@ namespace JsonApiFramework.Converters
                 #region Private Methods
                 private static EnumTryParseDelegate<TTarget> CreateEnumTryParseImpl()
                 {
-                    var enumType = typeof(Enum);
                     // public static bool TryParse<TEnum>(string value, bool ignoreCase, out TEnum result) where TEnum : struct;
-                    var tryParseMethodInfoOpen = enumType.GetMethods().FirstOrDefault(x => x.Name == "TryParse" && x.GetParameters().Count() == 3);
+                    var enumType = typeof(Enum);
+                    var tryParseMethodInfoOpen = enumType.GetMethods().First(x => x.Name == "TryParse" && x.GetParameters().Count() == 3);
                     var tryParseMethodInfoClosed = tryParseMethodInfoOpen.MakeGenericMethod(typeof(TTarget));
-                    var arguments = tryParseMethodInfoClosed.GetParameters();
 
+                    var arguments = tryParseMethodInfoClosed.GetParameters();
                     var sourceType = arguments[0].ParameterType;
-                    var targetType = arguments[2].ParameterType;
+                    var resultType = arguments[2].ParameterType;
 
                     var sourceExpression = Expression.Parameter(sourceType, "source");
                     var ignoreCaseExpression = Expression.Constant(true, typeof(bool));
-                    var targetExpression = Expression.Parameter(targetType, "target");
-                    var callExpression = Expression.Call(tryParseMethodInfoClosed, sourceExpression, ignoreCaseExpression, targetExpression);
-                    var callDelegateExpression = Expression.Lambda<EnumTryParseDelegate<TTarget>>(callExpression, sourceExpression, targetExpression);
+                    var resultExpression = Expression.Parameter(resultType, "result");
+                    var callExpression = Expression.Call(tryParseMethodInfoClosed, sourceExpression, ignoreCaseExpression, resultExpression);
+                    var callDelegateExpression = Expression.Lambda<EnumTryParseDelegate<TTarget>>(callExpression, sourceExpression, resultExpression);
                     var callDelegate = callDelegateExpression.Compile();
 
                     return callDelegate;
+                }
+                #endregion
+            }
+            #endregion
+        }
+
+        private static class TypeConverterNullableEnumTryParse<TTarget>
+        {
+            // PUBLIC METHODS ///////////////////////////////////////////////
+            #region Methods
+            public static bool From(string source, out TTarget target)
+            {
+                try
+                {
+                    return Cache.NullableEnumTryParseImpl(source, out target);
+                }
+                catch (Exception)
+                {
+                    target = default(TTarget);
+                    return false;
+                }
+            }
+            #endregion
+
+            // PRIVATE TYPES ////////////////////////////////////////////////////
+            #region Types
+            private static class Cache
+            {
+                #region Private Fields
+                // ReSharper disable StaticFieldInGenericType
+                public static readonly EnumTryParseDelegate<TTarget> NullableEnumTryParseImpl = Cache.CreateNullableEnumTryParseImpl();
+                // ReSharper restore StaticFieldInGenericType
+                #endregion
+
+                #region Private Methods
+                private static EnumTryParseDelegate<TTarget> CreateNullableEnumTryParseImpl()
+                {
+                    // public static bool TryParse<TEnum>(string value, bool ignoreCase, out TEnum result) where TEnum : struct;
+                    var typeConverterType = typeof(TypeConverter);
+                    var tryParseMethodInfoOpen = typeConverterType.GetMethods(BindingFlags.NonPublic | BindingFlags.Static).First(x => x.Name == "NullableEnumTryParse");
+
+                    var targetType = typeof(TTarget);
+                    var targetUnderlyingType = Nullable.GetUnderlyingType(targetType);
+                    var tryParseMethodInfoClosed = tryParseMethodInfoOpen.MakeGenericMethod(targetUnderlyingType);
+
+                    var arguments = tryParseMethodInfoClosed.GetParameters();
+                    var sourceType = arguments[0].ParameterType;
+                    var resultType = arguments[2].ParameterType;
+
+                    var sourceExpression = Expression.Parameter(sourceType, "source");
+                    var ignoreCaseExpression = Expression.Constant(true, typeof(bool));
+                    var resultExpression = Expression.Parameter(resultType, "result");
+                    var callExpression = Expression.Call(tryParseMethodInfoClosed, sourceExpression, ignoreCaseExpression, resultExpression);
+                    var callDelegateExpression = Expression.Lambda<EnumTryParseDelegate<TTarget>>(callExpression, sourceExpression, resultExpression);
+                    var callDelegate = callDelegateExpression.Compile();
+
+                    return callDelegate;
+                }
+                #endregion
+            }
+            #endregion
+        }
+
+        /// <summary>
+        /// Returns dynamically built lambdas (cached) to call new TTarget()
+        /// </summary>
+        /// <typeparam name="TTarget"></typeparam>
+        private static class New<TTarget>
+        {
+            // PUBLIC METHODS ///////////////////////////////////////////////
+            #region Methods
+            public static TTarget FromDefaultConstructor()
+            { return Cache.NewImplFromDefaultConstructor(); }
+            #endregion
+
+            // PRIVATE TYPES ////////////////////////////////////////////////////
+            #region Types
+            private static class Cache
+            {
+                #region Private Fields
+                // ReSharper disable StaticFieldInGenericType
+                public static readonly Func<TTarget> NewImplFromDefaultConstructor = Cache.CreateNewFromDefaultConstructorImpl();
+                // ReSharper restore StaticFieldInGenericType
+                #endregion
+
+                #region Private Methods
+                private static Func<TTarget> CreateNewFromDefaultConstructorImpl()
+                {
+                    var targetType = typeof(TTarget);
+                    var newExpression = Expression.New(targetType);
+                    var newLambdaExpression = Expression.Lambda<Func<TTarget>>(newExpression);
+                    var newLambda = newLambdaExpression.Compile();
+                    return newLambda;
                 }
                 #endregion
             }

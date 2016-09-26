@@ -30,11 +30,8 @@ namespace JsonApiFramework.Converters
 
         // PUBLIC METHODS ///////////////////////////////////////////////////
         #region ITypeConverterDefinition<TSource, TTarget> Implementation
-        public bool TryConvert(TSource source, TypeConverterContext context, out TTarget target)
-        {
-            target = this.Converter(source, context);
-            return true;
-        }
+        public TTarget Convert(TSource source, TypeConverterContext context)
+        { return this.Converter(source, context); }
         #endregion
 
         // PRIVATE PROPERTIES ///////////////////////////////////////////////

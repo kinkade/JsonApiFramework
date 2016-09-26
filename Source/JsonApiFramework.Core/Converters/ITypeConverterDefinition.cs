@@ -22,11 +22,11 @@ namespace JsonApiFramework.Converters
     /// Abstracts a generic type converter definition for a specific
     /// combination of source to target types.
     /// </summary>
-    public interface ITypeConverterDefinition<in TSource, TTarget> : ITypeConverterDefinition
+    public interface ITypeConverterDefinition<in TSource, out TTarget> : ITypeConverterDefinition
     {
         // PUBLIC METHODS ///////////////////////////////////////////////////
         #region Methods
-        bool TryConvert(TSource source, TypeConverterContext context, out TTarget target);
+        TTarget Convert(TSource source, TypeConverterContext context);
         #endregion
     }
 }

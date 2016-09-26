@@ -154,7 +154,7 @@ namespace JsonApiFramework.Tests.Converters
         public static readonly DerivedClass TestDerivedClass = new DerivedClass();
         #endregion
 
-        public static readonly IEnumerable<object[]> TryConvertGenericTestData2 = new[]
+        public static readonly IEnumerable<object[]> TryConvertGenericTestData = new[]
             {
                 #region BoolToXXX
                 new object []
@@ -915,10 +915,6 @@ namespace JsonApiFramework.Tests.Converters
                 },
                 #endregion
 
-            };
-
-        public static readonly IEnumerable<object[]> TryConvertGenericTestData = new[]
-            {
                 #region StringToXXX
                 new object []
                 {
@@ -969,31 +965,41 @@ namespace JsonApiFramework.Tests.Converters
                             new TryConvertGenericTest<string, DateTime?>("StringToNullable<DateTime>", TestDateTimeString, ConvertResult.Success, TestDateTime),
                             new TryConvertGenericTest<string, DateTime?>("StringToNullable<DateTime>WithFormat", TestDateTimeStringWithFormat, ConvertResult.Success, TestDateTime, FormatDateTimeContext),
                             new TryConvertGenericTest<string, DateTime?>("StringToNullable<DateTime>WithFormatAndFormatProvider", TestDateTimeStringWithFormatAndFormatProvider, ConvertResult.Success, TestDateTime, FormatAndFormatProviderDateTimeContext),
-                            new TryConvertGenericTest<string, DateTime?>("StringToNullable<DateTime>WithFormatAndFormatProvider", null, ConvertResult.Success, new DateTime?()),
+                            new TryConvertGenericTest<string, DateTime?>("StringToNullable<DateTime>", null, ConvertResult.Success, new DateTime?()),
                             new TryConvertGenericTest<string, DateTimeOffset?>("StringToNullable<DateTimeOffset>", TestDateTimeOffsetString, ConvertResult.Success, TestDateTimeOffset),
                             new TryConvertGenericTest<string, DateTimeOffset?>("StringToNullable<DateTimeOffset>WithFormat", TestDateTimeOffsetStringWithFormat, ConvertResult.Success, TestDateTimeOffset, FormatDateTimeOffsetContext),
                             new TryConvertGenericTest<string, DateTimeOffset?>("StringToNullable<DateTimeOffset>WithFormatAndFormatProvider", TestDateTimeOffsetStringWithFormatAndFormatProvider, ConvertResult.Success, TestDateTimeOffset, FormatAndFormatProviderDateTimeOffsetContext),
-                            new TryConvertGenericTest<string, DateTimeOffset?>("StringToNullable<DateTimeOffset>WithFormatAndFormatProvider", null, ConvertResult.Success, new DateTimeOffset?()),
+                            new TryConvertGenericTest<string, DateTimeOffset?>("StringToNullable<DateTimeOffset>", null, ConvertResult.Success, new DateTimeOffset?()),
                             new TryConvertGenericTest<string, decimal?>("StringToNullable<Decimal>", "42.1", ConvertResult.Success, 42.1m),
                             new TryConvertGenericTest<string, decimal?>("StringToNullable<Decimal>", null, ConvertResult.Success, new decimal?()),
                             new TryConvertGenericTest<string, double?>("StringToNullable<Double>", "42.2", ConvertResult.Success, 42.2),
                             new TryConvertGenericTest<string, double?>("StringToNullable<Double>", null, ConvertResult.Success, new double?()),
-
-                            new TryConvertGenericTest<string, PrimaryColor?>("StringToEnum", "42", ConvertResult.Success, PrimaryColor.Blue),
-                            new TryConvertGenericTest<string, PrimaryColor?>("StringToEnum", TestBlueString, ConvertResult.Success, PrimaryColor.Blue),
-                            new TryConvertGenericTest<string, PrimaryColor?>("StringToEnum", TestBlueLowercaseString, ConvertResult.Success, PrimaryColor.Blue),
-                            new TryConvertGenericTest<string, PrimaryColor?>("StringToEnum", null, ConvertResult.Success, new PrimaryColor?()),
-
-                            new TryConvertGenericTest<string, float?>("StringToNullable<Float>", "42", ConvertResult.Success, 42),
-                            new TryConvertGenericTest<string, Guid?>("StringToNullable<Guid>", "42", ConvertResult.Failure, default(Guid?)),
+                            new TryConvertGenericTest<string, PrimaryColor?>("StringToNullable<Enum>", "42", ConvertResult.Success, PrimaryColor.Blue),
+                            new TryConvertGenericTest<string, PrimaryColor?>("StringToNullable<Enum>", TestBlueString, ConvertResult.Success, PrimaryColor.Blue),
+                            new TryConvertGenericTest<string, PrimaryColor?>("StringToNullable<Enum>", TestBlueLowercaseString, ConvertResult.Success, PrimaryColor.Blue),
+                            new TryConvertGenericTest<string, PrimaryColor?>("StringToNullable<Enum>", null, ConvertResult.Success, new PrimaryColor?()),
+                            new TryConvertGenericTest<string, float?>("StringToNullable<Float>", "42.3", ConvertResult.Success, (float)42.3),
+                            new TryConvertGenericTest<string, float?>("StringToNullable<Float>", null, ConvertResult.Success, new float?()),
+                            new TryConvertGenericTest<string, Guid?>("StringToNullable<Guid>", TestGuidString, ConvertResult.Success, TestGuid),
+                            new TryConvertGenericTest<string, Guid?>("StringToNullable<Guid>", null, ConvertResult.Success, new Guid?()),
                             new TryConvertGenericTest<string, int?>("StringToNullable<Int>", "42", ConvertResult.Success, 42),
+                            new TryConvertGenericTest<string, int?>("StringToNullable<Int>", null, ConvertResult.Success, new int?()),
                             new TryConvertGenericTest<string, long?>("StringToNullable<Long>", "42", ConvertResult.Success, 42),
+                            new TryConvertGenericTest<string, long?>("StringToNullable<Long>", null, ConvertResult.Success, new long?()),
                             new TryConvertGenericTest<string, sbyte?>("StringToNullable<SByte>", "42", ConvertResult.Success, 42),
+                            new TryConvertGenericTest<string, sbyte?>("StringToNullable<SByte>", null, ConvertResult.Success, new sbyte?()),
                             new TryConvertGenericTest<string, short?>("StringToNullable<Short>", "42", ConvertResult.Success, 42),
-                            new TryConvertGenericTest<string, TimeSpan?>("StringToNullable<TimeSpan>", "42", ConvertResult.Failure, default(TimeSpan?)),
+                            new TryConvertGenericTest<string, short?>("StringToNullable<Short>", null, ConvertResult.Success, new short?()),
+                            new TryConvertGenericTest<string, TimeSpan?>("StringToNullable<TimeSpan>", TestTimeSpanString, ConvertResult.Success, TestTimeSpan),
+                            new TryConvertGenericTest<string, TimeSpan?>("StringToNullable<TimeSpan>WithFormat", TestTimeSpanStringWithFormat, ConvertResult.Success, TestTimeSpan, FormatTimeSpanContext),
+                            new TryConvertGenericTest<string, TimeSpan?>("StringToNullable<TimeSpan>WithFormatAndFormatProvider", TestTimeSpanStringWithFormatAndFormatProvider, ConvertResult.Success, TestTimeSpan, FormatAndFormatProviderTimeSpanContext),
+                            new TryConvertGenericTest<string, TimeSpan?>("StringToNullable<TimeSpan>", null, ConvertResult.Success, new TimeSpan?()),
                             new TryConvertGenericTest<string, uint?>("StringToNullable<UInt>", "42", ConvertResult.Success, 42),
+                            new TryConvertGenericTest<string, uint?>("StringToNullable<UInt>", null, ConvertResult.Success, new uint?()),
                             new TryConvertGenericTest<string, ulong?>("StringToNullable<ULong>", "42", ConvertResult.Success, 42),
+                            new TryConvertGenericTest<string, ulong?>("StringToNullable<ULong>", null, ConvertResult.Success, new ulong?()),
                             new TryConvertGenericTest<string, ushort?>("StringToNullable<UShort>", "42", ConvertResult.Success, 42),
+                            new TryConvertGenericTest<string, ushort?>("StringToNullable<UShort>", null, ConvertResult.Success, new ushort?()),
 
                             // Interface/Class Types
                             new TryConvertGenericTest<string, IInterface>("StringToInterface", "42", ConvertResult.Failure, default(IInterface)),
