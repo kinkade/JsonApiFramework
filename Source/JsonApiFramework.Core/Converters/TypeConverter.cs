@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Threading;
 
 using JsonApiFramework.Reflection;
 
@@ -18,6 +19,9 @@ namespace JsonApiFramework.Converters
     /// One major design goal is to minimize boxing/unboxing. When there is a
     /// legal cast between the types, boxing/unboxing is eliminated by using
     /// dynamically built (cached) casting lambdas.
+    /// 
+    /// Also any reflection should only happen once and the result of the
+    /// reflection cached for future use to avoid repetitive reflection.
     /// </notes>
     public class TypeConverter : ITypeConverter
     {
@@ -33,62 +37,24 @@ namespace JsonApiFramework.Converters
         #region Convert Methods
         public TTarget Convert<TSource, TTarget>(TSource source, TypeConverterContext context)
         {
+            TTarget target;
+
             // Try convert with a type converter definition if possible.
-            // If there is a type converter definition, convert and do not try any further.
-            ITypeConverterDefinition<TSource, TTarget> definition;
-            if (this.TryGetTypeConverterDefinition(out definition))
-            {
-                try
-                {
-                    var target = definition.Convert(source, context);
-                    return target;
-                }
-                catch (Exception exception)
-                {
-                    var definitionTypeConverterException = TypeConverterException.Create<TSource, TTarget>(source, exception);
-                    throw definitionTypeConverterException;
-                }
-            }
+            if (this.TryConvertByDefinitionStrict(source, context, out target))
+                return target;
+
+            // Try programmatic conversion for special cases if possible.
+            // 1. Enumerations (source or target)
+            if (this.TryConvertByEnumerationStrict(source, context, out target))
+                return target;
 
             // Try direct cast.
-            // If an exception fires, hold off until other special cases of conversion are tried if available.
-            TypeConverterException castTypeConverterException;
-            try
-            {
-                var target = Cast<TSource, TTarget>(source);
+            if (TryConvertByCastStrict(source, context, out target))
                 return target;
-            }
-            catch (Exception exception)
-            {
-                castTypeConverterException = TypeConverterException.Create<TSource, TTarget>(source, exception);
-            }
 
-            // Try direct conversion for special cases:
-            // 1. Enumerations
-            var targetType = typeof(TTarget);
-
-            // .. Enumerations
-            var isTargetTypeEnum = targetType.IsEnum();
-            if (isTargetTypeEnum)
-            {
-                var target = ConvertToEnum<TSource, TTarget>(source, context);
-                return target;
-            }
-
-            var isTargetTypeNullable = targetType.IsNullableType();
-            if (isTargetTypeNullable)
-            {
-                var isTargetTypeNullableUnderlyingTypeEnum = Nullable.GetUnderlyingType(targetType).IsEnum();
-                if (isTargetTypeNullableUnderlyingTypeEnum)
-                {
-                    var target = ConvertToNullableEnum<TSource, TTarget>(source, context);
-                    return target;
-                }
-            }
-
-            // Error in convert between source and target types, throw direct
-            // cast exception as all special cases have been exhausted.
-            throw castTypeConverterException;
+            // Unable to convert between source and target types.
+            var typeConverterException = TypeConverterException.Create<TSource, TTarget>(source);
+            throw typeConverterException;
         }
         #endregion
 
@@ -136,7 +102,7 @@ namespace JsonApiFramework.Converters
             var sourceAsString = isSourceString ? CastTo<string>.From(source) : null;
             if (isSourceString && String.IsNullOrWhiteSpace(sourceAsString))
             {
-                return New<TTarget>.FromDefaultConstructor();
+                return New<TTarget>.WithZeroArguments();
             }
 
             // Handle when source type can be converted to an integer.
@@ -158,6 +124,111 @@ namespace JsonApiFramework.Converters
             // Unable to convert source type to an enumeration.
             var typeConverterException = TypeConverterException.Create<TSource, TTarget>(source);
             throw typeConverterException;
+        }
+
+        /// <summary>
+        /// Try and convert by type converter definition if a definition
+        /// exists for the source and target types.
+        /// </summary>
+        /// <remarks>
+        /// Strict means if type converter definition exists for the source
+        /// and target types, perform conversion and let any exception be thrown.
+        /// </remarks>
+        private bool TryConvertByDefinitionStrict<TSource, TTarget>(TSource source, TypeConverterContext context, out TTarget target)
+        {
+            ITypeConverterDefinition<TSource, TTarget> definition;
+            if (!this.TryGetTypeConverterDefinition(out definition))
+            {
+                target = default(TTarget);
+                return false;
+            }
+
+            try
+            {
+                target = definition.Convert(source, context);
+                return true;
+            }
+            catch (Exception exception)
+            {
+                var typeConverterException = TypeConverterException.Create<TSource, TTarget>(source, exception);
+                throw typeConverterException;
+            }
+        }
+
+        /// <summary>
+        /// Try and convert by type casting from source to target types.
+        /// </summary>
+        /// <remarks>
+        /// Strict means perform cast and let any exception be thrown.
+        /// </remarks>
+        private static bool TryConvertByCastStrict<TSource, TTarget>(TSource source, TypeConverterContext context, out TTarget target)
+        {
+            try
+            {
+                target = Cast<TSource, TTarget>(source);
+                return true;
+            }
+            catch (Exception exception)
+            {
+                var typeConverterException = TypeConverterException.Create<TSource, TTarget>(source, exception);
+                throw typeConverterException;
+            }
+        }
+
+        /// <summary>
+        /// Try and convert by enumeration for source to target types if applicable.
+        /// </summary>
+        /// <remarks>
+        /// Strict means if source or target types are enumerations, then perform conversion
+        /// and let any exception be thrown.
+        /// </remarks>
+        private bool TryConvertByEnumerationStrict<TSource, TTarget>(TSource source, TypeConverterContext context, out TTarget target)
+        {
+            var targetType = typeof(TTarget);
+
+            var isTargetTypeEnum = targetType.IsEnum();
+            if (isTargetTypeEnum)
+            {
+                target = ConvertToEnum<TSource, TTarget>(source, context);
+                return true;
+            }
+
+            var isTargetTypeNullable = targetType.IsNullableType();
+            if (isTargetTypeNullable)
+            {
+                var isTargetTypeNullableUnderlyingTypeEnum = Nullable.GetUnderlyingType(targetType).IsEnum();
+                if (isTargetTypeNullableUnderlyingTypeEnum)
+                {
+                    target = ConvertToNullableEnum<TSource, TTarget>(source, context);
+                    return true;
+                }
+            }
+
+            var sourceType = typeof(TSource);
+
+            var isSourceTypeEnum = sourceType.IsEnum();
+            if (isSourceTypeEnum)
+            {
+                if (targetType.IsString())
+                {
+                    var targetAsString = EnumToString<TSource>.From(source, context);
+                    target = Cast<string, TTarget>(targetAsString);
+                    return true;
+                }
+
+                if (targetType == typeof(bool) ||
+                    targetType == typeof(decimal) ||
+                    targetType == typeof(bool?) ||
+                    targetType == typeof(decimal?))
+                {
+                    var sourceAsInteger = Cast<TSource, int>(source);
+                    target = this.Convert<int, TTarget>(sourceAsInteger);
+                    return true;
+                }
+            }
+
+            target = default(TTarget);
+            return false;
         }
         #endregion
 
@@ -232,6 +303,13 @@ namespace JsonApiFramework.Converters
                 : dateTimeOffset.ToString(context.SafeGetFormat(), context.SafeGetFormatProvider());
         }
 
+        private static string ConvertGuidToString(Guid guid, TypeConverterContext context)
+        {
+            return String.IsNullOrWhiteSpace(context.SafeGetFormat())
+                ? guid.ToString("D")
+                : guid.ToString(context.SafeGetFormat());
+        }
+
         private static DateTime? ConvertStringToNullableDateTime(string str, TypeConverterContext context)
         {
             if (String.IsNullOrWhiteSpace(str))
@@ -271,6 +349,13 @@ namespace JsonApiFramework.Converters
                 ? TimeSpan.Parse(str, context.SafeGetFormatProvider())
                 : TimeSpan.ParseExact(str, context.SafeGetFormat(), context.SafeGetFormatProvider());
         }
+
+        private static string ConvertTimeSpanToString(TimeSpan timeSpan, TypeConverterContext context)
+        {
+            return String.IsNullOrWhiteSpace(context.SafeGetFormat())
+                ? timeSpan.ToString("c")
+                : timeSpan.ToString(context.SafeGetFormat(), context.SafeGetFormatProvider());
+        }
         #endregion
 
         #region Enumeration Methods
@@ -299,6 +384,8 @@ namespace JsonApiFramework.Converters
                 new TypeConverterDefinitionFunc<byte, bool>((s, c) => System.Convert.ToBoolean(s)),
                 new TypeConverterDefinitionFunc<byte, bool?>((s, c) => System.Convert.ToBoolean(s)),
                 new TypeConverterDefinitionFunc<byte, string>((s, c) => System.Convert.ToString(s, c.SafeGetFormatProvider())),
+                new TypeConverterDefinitionFunc<byte[], Guid>((s, c) => new Guid(s)),
+                new TypeConverterDefinitionFunc<byte[], Guid?>((s, c) => s != null ? new Guid(s) : new Guid?()),
                 new TypeConverterDefinitionFunc<byte[], string>((s, c) => s != null ? System.Convert.ToBase64String(s) : null),
                 new TypeConverterDefinitionFunc<char, bool>((s, c) => System.Convert.ToBoolean(s)),
                 new TypeConverterDefinitionFunc<char, bool?>((s, c) => System.Convert.ToBoolean(s)),
@@ -316,6 +403,8 @@ namespace JsonApiFramework.Converters
                 new TypeConverterDefinitionFunc<float, bool>((s, c) => System.Convert.ToBoolean(s)),
                 new TypeConverterDefinitionFunc<float, bool?>((s, c) => System.Convert.ToBoolean(s)),
                 new TypeConverterDefinitionFunc<float, string>((s, c) => System.Convert.ToString(s, c.SafeGetFormatProvider())),
+                new TypeConverterDefinitionFunc<Guid, byte[]>((s, c) => s.ToByteArray()),
+                new TypeConverterDefinitionFunc<Guid, string>(ConvertGuidToString),
                 new TypeConverterDefinitionFunc<int, bool>((s, c) => System.Convert.ToBoolean(s)),
                 new TypeConverterDefinitionFunc<int, bool?>((s, c) => System.Convert.ToBoolean(s)),
                 new TypeConverterDefinitionFunc<int, string>((s, c) => System.Convert.ToString(s, c.SafeGetFormatProvider())),
@@ -365,6 +454,8 @@ namespace JsonApiFramework.Converters
                 new TypeConverterDefinitionFunc<string, Uri>((s, c) => !String.IsNullOrWhiteSpace(s) ? new Uri(s, UriKind.RelativeOrAbsolute) : null),
                 new TypeConverterDefinitionFunc<string, ushort>((s, c) => System.Convert.ToUInt16(s, c.SafeGetFormatProvider())),
                 new TypeConverterDefinitionFunc<string, ushort?>((s, c) => !String.IsNullOrWhiteSpace(s) ? System.Convert.ToUInt16(s, c.SafeGetFormatProvider()) : new ushort?()),
+                new TypeConverterDefinitionFunc<TimeSpan, string>(ConvertTimeSpanToString),
+                new TypeConverterDefinitionFunc<Type, string>((s, c) => s != null ? s.GetCompactQualifiedName() : null),
                 new TypeConverterDefinitionFunc<uint, bool>((s, c) => System.Convert.ToBoolean(s)),
                 new TypeConverterDefinitionFunc<uint, bool?>((s, c) => System.Convert.ToBoolean(s)),
                 new TypeConverterDefinitionFunc<uint, string>((s, c) => System.Convert.ToString(s, c.SafeGetFormatProvider())),
@@ -400,8 +491,8 @@ namespace JsonApiFramework.Converters
             #region Types
             private static class Cache<TSource>
             {
-                #region Public Fields
-                public static readonly Func<TSource, TTarget> CastImpl = CreateCastImpl();
+                #region Public Properties
+                public static Func<TSource, TTarget> CastImpl { get { return _castImpl.Value; } }
                 #endregion
 
                 #region Private Methods
@@ -415,6 +506,85 @@ namespace JsonApiFramework.Converters
                     return convertLambda;
                 }
                 #endregion
+
+                #region Private Fields
+                // ReSharper disable InconsistentNaming
+                private static readonly Lazy<Func<TSource, TTarget>> _castImpl = new Lazy<Func<TSource, TTarget>>(CreateCastImpl, LazyThreadSafetyMode.PublicationOnly);
+                // ReSharper restore InconsistentNaming
+                #endregion
+            }
+            #endregion
+        }
+
+        /// <summary>
+        /// Returns dynamically built lambdas (cached) to call the ToString
+        /// instance method on the source object when TSource is an enumeration.
+        /// </summary>
+        private static class EnumToString<TSource>
+        {
+            // PUBLIC METHODS ///////////////////////////////////////////////
+            #region Methods
+            public static string From(TSource source, TypeConverterContext context)
+            {
+                var format = context.SafeGetFormat();
+                return String.IsNullOrWhiteSpace(format)
+                    ? Cache.ToStringImpl(source)
+                    : Cache.ToStringWithFormatImpl(source, format);
+            }
+            #endregion
+
+            // PRIVATE TYPES ////////////////////////////////////////////////////
+            #region Types
+            private static class Cache
+            {
+                #region Public Properties
+                // ReSharper disable StaticFieldInGenericType
+                public static Func<TSource, string> ToStringImpl { get { return _toStringImpl.Value; } }
+                public static Func<TSource, string, string> ToStringWithFormatImpl { get { return _toStringWithFormatImpl.Value; } }
+                // ReSharper restore StaticFieldInGenericType
+                #endregion
+
+                #region Private Methods
+                private static Func<TSource, string> CreateToStringImpl()
+                {
+                    var enumType = typeof(Enum);
+                    var toStringMethod = enumType
+                        .GetMethod("ToString", BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.Instance);
+
+                    var sourceType = typeof(TSource);
+                    var sourceExpression = Expression.Parameter(sourceType, "source");
+                    var callExpression = Expression.Call(sourceExpression, toStringMethod);
+                    var callLambdaExpression = Expression.Lambda<Func<TSource, string>>(callExpression, sourceExpression);
+                    var callLambda = callLambdaExpression.Compile();
+                    return callLambda;
+                }
+
+                private static Func<TSource, string, string> CreateToStringWithFormatImpl()
+                {
+                    var enumType = typeof(Enum);
+                    var toStringWithFormatMethod = enumType
+                        .GetMethod("ToString", BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.Instance, typeof(string));
+
+                    var sourceType = typeof(TSource);
+                    var sourceExpression = Expression.Parameter(sourceType, "source");
+                    var formatExpression = Expression.Parameter(typeof(string), "format");
+                    // ReSharper disable PossiblyMistakenUseOfParamsMethod
+                    var callExpression = Expression.Call(sourceExpression, toStringWithFormatMethod, formatExpression);
+                    // ReSharper restore PossiblyMistakenUseOfParamsMethod
+                    var callLambdaExpression = Expression.Lambda<Func<TSource, string, string>>(callExpression, sourceExpression, formatExpression);
+                    var callLambda = callLambdaExpression.Compile();
+                    return callLambda;
+                }
+                #endregion
+
+                #region Private Fields
+                // ReSharper disable InconsistentNaming
+                // ReSharper disable StaticFieldInGenericType
+                private static readonly Lazy<Func<TSource, string>> _toStringImpl = new Lazy<Func<TSource, string>>(CreateToStringImpl, LazyThreadSafetyMode.PublicationOnly);
+                private static readonly Lazy<Func<TSource, string, string>> _toStringWithFormatImpl = new Lazy<Func<TSource, string, string>>(CreateToStringWithFormatImpl, LazyThreadSafetyMode.PublicationOnly);
+                // ReSharper restore StaticFieldInGenericType
+                // ReSharper restore InconsistentNaming
+                #endregion
             }
             #endregion
         }
@@ -422,7 +592,7 @@ namespace JsonApiFramework.Converters
         private delegate bool EnumTryParseDelegate<TTarget>(string source, out TTarget target);
 
         /// <summary>
-        /// Returns dynamically built lambdas (cached) to call Enum.TryParse method.
+        /// Returns dynamically built lambdas (cached) to call Enum.TryParse static method.
         /// </summary>
         private static class EnumTryParse<TTarget>
         {
@@ -446,10 +616,8 @@ namespace JsonApiFramework.Converters
             #region Types
             private static class Cache
             {
-                #region Private Fields
-                // ReSharper disable StaticFieldInGenericType
-                public static readonly EnumTryParseDelegate<TTarget> EnumTryParseImpl = Cache.CreateEnumTryParseImpl();
-                // ReSharper restore StaticFieldInGenericType
+                #region Public Properties
+                public static EnumTryParseDelegate<TTarget> EnumTryParseImpl { get { return _enumTryParseImpl.Value; } }
                 #endregion
 
                 #region Private Methods
@@ -457,7 +625,7 @@ namespace JsonApiFramework.Converters
                 {
                     // public static bool TryParse<TEnum>(string value, bool ignoreCase, out TEnum result) where TEnum : struct;
                     var enumType = typeof(Enum);
-                    var tryParseMethodInfoOpen = enumType.GetMethods().First(x => x.Name == "TryParse" && x.GetParameters().Count() == 3);
+                    var tryParseMethodInfoOpen = enumType.GetMethods().Single(x => x.Name == "TryParse" && x.GetParameters().Count() == 3);
                     var tryParseMethodInfoClosed = tryParseMethodInfoOpen.MakeGenericMethod(typeof(TTarget));
 
                     var arguments = tryParseMethodInfoClosed.GetParameters();
@@ -474,10 +642,22 @@ namespace JsonApiFramework.Converters
                     return callDelegate;
                 }
                 #endregion
+
+                #region Private Fields
+                // ReSharper disable InconsistentNaming
+                // ReSharper disable StaticFieldInGenericType
+                private static readonly Lazy<EnumTryParseDelegate<TTarget>> _enumTryParseImpl = new Lazy<EnumTryParseDelegate<TTarget>>(CreateEnumTryParseImpl, LazyThreadSafetyMode.PublicationOnly);
+                // ReSharper restore StaticFieldInGenericType
+                // ReSharper restore InconsistentNaming
+                #endregion
             }
             #endregion
         }
 
+        /// <summary>
+        /// Returns dynamically built lambdas (cached) to call TypeConverter.NullableEnumTryParse
+        /// static method.
+        /// </summary>
         private static class TypeConverterNullableEnumTryParse<TTarget>
         {
             // PUBLIC METHODS ///////////////////////////////////////////////
@@ -500,10 +680,8 @@ namespace JsonApiFramework.Converters
             #region Types
             private static class Cache
             {
-                #region Private Fields
-                // ReSharper disable StaticFieldInGenericType
-                public static readonly EnumTryParseDelegate<TTarget> NullableEnumTryParseImpl = Cache.CreateNullableEnumTryParseImpl();
-                // ReSharper restore StaticFieldInGenericType
+                #region Public Properties
+                public static EnumTryParseDelegate<TTarget> NullableEnumTryParseImpl { get { return _nullableEnumTryParseImpl.Value; } }
                 #endregion
 
                 #region Private Methods
@@ -511,7 +689,7 @@ namespace JsonApiFramework.Converters
                 {
                     // public static bool TryParse<TEnum>(string value, bool ignoreCase, out TEnum result) where TEnum : struct;
                     var typeConverterType = typeof(TypeConverter);
-                    var tryParseMethodInfoOpen = typeConverterType.GetMethods(BindingFlags.NonPublic | BindingFlags.Static).First(x => x.Name == "NullableEnumTryParse");
+                    var tryParseMethodInfoOpen = typeConverterType.GetMethods(BindingFlags.NonPublic | BindingFlags.Static).Single(x => x.Name == "NullableEnumTryParse");
 
                     var targetType = typeof(TTarget);
                     var targetUnderlyingType = Nullable.GetUnderlyingType(targetType);
@@ -531,6 +709,14 @@ namespace JsonApiFramework.Converters
                     return callDelegate;
                 }
                 #endregion
+
+                #region Private Fields
+                // ReSharper disable InconsistentNaming
+                // ReSharper disable StaticFieldInGenericType
+                private static readonly Lazy<EnumTryParseDelegate<TTarget>> _nullableEnumTryParseImpl = new Lazy<EnumTryParseDelegate<TTarget>>(CreateNullableEnumTryParseImpl, LazyThreadSafetyMode.PublicationOnly);
+                // ReSharper restore StaticFieldInGenericType
+                // ReSharper restore InconsistentNaming
+                #endregion
             }
             #endregion
         }
@@ -543,22 +729,20 @@ namespace JsonApiFramework.Converters
         {
             // PUBLIC METHODS ///////////////////////////////////////////////
             #region Methods
-            public static TTarget FromDefaultConstructor()
-            { return Cache.NewImplFromDefaultConstructor(); }
+            public static TTarget WithZeroArguments()
+            { return Cache.NewWithZeroArgumentsImpl(); }
             #endregion
 
             // PRIVATE TYPES ////////////////////////////////////////////////////
             #region Types
             private static class Cache
             {
-                #region Private Fields
-                // ReSharper disable StaticFieldInGenericType
-                public static readonly Func<TTarget> NewImplFromDefaultConstructor = Cache.CreateNewFromDefaultConstructorImpl();
-                // ReSharper restore StaticFieldInGenericType
+                #region Public Properties
+                public static Func<TTarget> NewWithZeroArgumentsImpl { get { return _newWithZeroArgumentsImpl.Value; } }
                 #endregion
 
                 #region Private Methods
-                private static Func<TTarget> CreateNewFromDefaultConstructorImpl()
+                private static Func<TTarget> CreateNewWithZeroArgumentsImpl()
                 {
                     var targetType = typeof(TTarget);
                     var newExpression = Expression.New(targetType);
@@ -566,6 +750,14 @@ namespace JsonApiFramework.Converters
                     var newLambda = newLambdaExpression.Compile();
                     return newLambda;
                 }
+                #endregion
+
+                #region Private Fields
+                // ReSharper disable InconsistentNaming
+                // ReSharper disable StaticFieldInGenericType
+                private static readonly Lazy<Func<TTarget>> _newWithZeroArgumentsImpl = new Lazy<Func<TTarget>>(CreateNewWithZeroArgumentsImpl, LazyThreadSafetyMode.PublicationOnly);
+                // ReSharper restore StaticFieldInGenericType
+                // ReSharper restore InconsistentNaming
                 #endregion
             }
             #endregion

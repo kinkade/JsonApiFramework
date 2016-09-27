@@ -70,17 +70,17 @@ namespace JsonApiFramework.Tests.Converters
             };
 
         public static readonly TypeConverterContext FormatDateTimeOffsetContext = new TypeConverterContext
-        {
-            Format = FullDateTimeFormat,
-            DateTimeStyles = DateTimeStyles.AssumeUniversal
-        };
+            {
+                Format = FullDateTimeFormat,
+                DateTimeStyles = DateTimeStyles.AssumeUniversal
+            };
 
         public static readonly TypeConverterContext FormatAndFormatProviderDateTimeOffsetContext = new TypeConverterContext
-        {
-            Format = FullDateTimeFormat,
-            FormatProvider = SpanishMexicoCulture,
-            DateTimeStyles = DateTimeStyles.AssumeUniversal
-        };
+            {
+                Format = FullDateTimeFormat,
+                FormatProvider = SpanishMexicoCulture,
+                DateTimeStyles = DateTimeStyles.AssumeUniversal
+            };
 
         public static readonly DateTime TestDateTime = new DateTime(1968, 5, 20, 20, 2, 42, 0, DateTimeKind.Utc);
         public static readonly string TestDateTimeString = TestDateTime.ToString(DefaultDateTimeFormat);
@@ -131,6 +131,13 @@ namespace JsonApiFramework.Tests.Converters
         public const int TestBlueOrdinal = 42;
         public const string TestBlueString = "Blue";
         public const string TestBlueLowercaseString = "blue";
+        public const string IntegerEnumFormat = "D";
+        public const string TestBlueOrdinalAsString = "42";
+
+        public static readonly TypeConverterContext FormatEnumContext = new TypeConverterContext
+            {
+                Format = IntegerEnumFormat
+            };
 
         // ReSharper disable UnusedMember.Global
         public enum PrimaryColor
@@ -292,7 +299,7 @@ namespace JsonApiFramework.Tests.Converters
                             new TryConvertGenericTest<byte[], double>("ByteArrayToDouble", TestByteArray, ConvertResult.Failure, default(double)),
                             new TryConvertGenericTest<byte[], PrimaryColor>("ByteArrayToEnum", TestByteArray, ConvertResult.Failure, default(PrimaryColor)),
                             new TryConvertGenericTest<byte[], float>("ByteArrayToFloat", TestByteArray, ConvertResult.Failure, default(float)),
-                            new TryConvertGenericTest<byte[], Guid>("ByteArrayToGuid", TestByteArray, ConvertResult.Failure, default(Guid)),
+                            new TryConvertGenericTest<byte[], Guid>("ByteArrayToGuid", TestGuidByteArray, ConvertResult.Success, TestGuid),
                             new TryConvertGenericTest<byte[], int>("ByteArrayToInt", TestByteArray, ConvertResult.Failure, default(int)),
                             new TryConvertGenericTest<byte[], long>("ByteArrayToLong", TestByteArray, ConvertResult.Failure, default(long)),
                             new TryConvertGenericTest<byte[], sbyte>("ByteArrayToSByte", TestByteArray, ConvertResult.Failure, default(sbyte)),
@@ -315,7 +322,7 @@ namespace JsonApiFramework.Tests.Converters
                             new TryConvertGenericTest<byte[], double?>("ByteArrayToNullable<Double>", TestByteArray, ConvertResult.Failure, default(double?)),
                             new TryConvertGenericTest<byte[], PrimaryColor?>("ByteArrayToNullable<Enum>", TestByteArray, ConvertResult.Failure, default(PrimaryColor?)),
                             new TryConvertGenericTest<byte[], float?>("ByteArrayToNullable<Float>", TestByteArray, ConvertResult.Failure, default(float?)),
-                            new TryConvertGenericTest<byte[], Guid?>("ByteArrayToNullable<Guid>", TestByteArray, ConvertResult.Failure, new Guid?()),
+                            new TryConvertGenericTest<byte[], Guid?>("ByteArrayToNullable<Guid>", TestGuidByteArray, ConvertResult.Success, TestGuid),
                             new TryConvertGenericTest<byte[], int?>("ByteArrayToNullable<Int>", TestByteArray, ConvertResult.Failure, default(int?)),
                             new TryConvertGenericTest<byte[], long?>("ByteArrayToNullable<Long>", TestByteArray, ConvertResult.Failure, default(long?)),
                             new TryConvertGenericTest<byte[], sbyte?>("ByteArrayToNullable<SByte>", TestByteArray, ConvertResult.Failure, default(sbyte?)),
@@ -634,6 +641,7 @@ namespace JsonApiFramework.Tests.Converters
                     new object []
                         {
                             // Simple Types
+                            new TryConvertGenericTest<PrimaryColor, bool>("EnumToBool", PrimaryColor.Red, ConvertResult.Success, false),
                             new TryConvertGenericTest<PrimaryColor, bool>("EnumToBool", PrimaryColor.Blue, ConvertResult.Success, true),
                             new TryConvertGenericTest<PrimaryColor, byte>("EnumToByte", PrimaryColor.Blue, ConvertResult.Success, TestBlueOrdinal),
                             new TryConvertGenericTest<PrimaryColor, byte[]>("EnumToByteArray", PrimaryColor.Blue, ConvertResult.Failure, default(byte[])),
@@ -650,6 +658,7 @@ namespace JsonApiFramework.Tests.Converters
                             new TryConvertGenericTest<PrimaryColor, sbyte>("EnumToSByte", PrimaryColor.Blue, ConvertResult.Success, TestBlueOrdinal),
                             new TryConvertGenericTest<PrimaryColor, short>("EnumToShort", PrimaryColor.Blue, ConvertResult.Success, TestBlueOrdinal),
                             new TryConvertGenericTest<PrimaryColor, string>("EnumToString", PrimaryColor.Blue, ConvertResult.Success, TestBlueString),
+                            new TryConvertGenericTest<PrimaryColor, string>("EnumToStringWithFormat", PrimaryColor.Blue, ConvertResult.Success, TestBlueOrdinalAsString, FormatEnumContext),
                             new TryConvertGenericTest<PrimaryColor, TimeSpan>("EnumToTimeSpan", PrimaryColor.Blue, ConvertResult.Failure, default(TimeSpan)),
                             new TryConvertGenericTest<PrimaryColor, Type>("EnumToType", PrimaryColor.Blue, ConvertResult.Failure, default(Type)),
                             new TryConvertGenericTest<PrimaryColor, uint>("EnumToUInt", PrimaryColor.Blue, ConvertResult.Success, TestBlueOrdinal),
@@ -658,6 +667,7 @@ namespace JsonApiFramework.Tests.Converters
                             new TryConvertGenericTest<PrimaryColor, Uri>("EnumToUri", PrimaryColor.Blue, ConvertResult.Failure, default(Uri)),
 
                             // Nullable Types
+                            new TryConvertGenericTest<PrimaryColor, bool?>("EnumToNullable<Bool>", PrimaryColor.Red, ConvertResult.Success, false),
                             new TryConvertGenericTest<PrimaryColor, bool?>("EnumToNullable<Bool>", PrimaryColor.Blue, ConvertResult.Success, true),
                             new TryConvertGenericTest<PrimaryColor, byte?>("EnumToNullable<Byte>", PrimaryColor.Blue, ConvertResult.Success, TestBlueOrdinal),
                             new TryConvertGenericTest<PrimaryColor, char?>("EnumToNullable<Char>", PrimaryColor.Blue, ConvertResult.Success, '*'),
@@ -1149,9 +1159,9 @@ namespace JsonApiFramework.Tests.Converters
                             new TryConvertGenericTest<TimeSpan, long>("TimeSpanToLong", TestTimeSpan, ConvertResult.Failure, default(long)),
                             new TryConvertGenericTest<TimeSpan, sbyte>("TimeSpanToSByte", TestTimeSpan, ConvertResult.Failure, default(sbyte)),
                             new TryConvertGenericTest<TimeSpan, short>("TimeSpanToShort", TestTimeSpan, ConvertResult.Failure, default(short)),
-                            new TryConvertGenericTest<TimeSpan, string>("TimeSpanToString", TestTimeSpan, ConvertResult.Success, TestDateTimeString),
-                            new TryConvertGenericTest<TimeSpan, string>("TimeSpanToStringWithFormat", TestTimeSpan, ConvertResult.Success, TestDateTimeStringWithFormat, FormatDateTimeContext),
-                            new TryConvertGenericTest<TimeSpan, string>("TimeSpanToStringWithFormatAndFormatProvider", TestTimeSpan, ConvertResult.Success, TestDateTimeStringWithFormatAndFormatProvider, FormatAndFormatProviderDateTimeContext),
+                            new TryConvertGenericTest<TimeSpan, string>("TimeSpanToString", TestTimeSpan, ConvertResult.Success, TestTimeSpanString),
+                            new TryConvertGenericTest<TimeSpan, string>("TimeSpanToStringWithFormat", TestTimeSpan, ConvertResult.Success, TestTimeSpanStringWithFormat, FormatTimeSpanContext),
+                            new TryConvertGenericTest<TimeSpan, string>("TimeSpanToStringWithFormatAndFormatProvider", TestTimeSpan, ConvertResult.Success, TestTimeSpanStringWithFormatAndFormatProvider, FormatAndFormatProviderTimeSpanContext),
                             new TryConvertGenericTest<TimeSpan, TimeSpan>("TimeSpanToTimeSpan", TestTimeSpan, ConvertResult.Success, TestTimeSpan),
                             new TryConvertGenericTest<TimeSpan, Type>("TimeSpanToType", TestTimeSpan, ConvertResult.Failure, default(Type)),
                             new TryConvertGenericTest<TimeSpan, uint>("TimeSpanToUInt", TestTimeSpan, ConvertResult.Failure, default(uint)),
