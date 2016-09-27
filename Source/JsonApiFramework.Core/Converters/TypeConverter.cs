@@ -307,6 +307,15 @@ namespace JsonApiFramework.Converters
                 : guid.ToString(context.SafeGetFormat());
         }
 
+        private static bool ConvertNullableByteToBool(byte? source, TypeConverterContext context)
+        {
+            if (source.HasValue)
+                return System.Convert.ToBoolean(source.Value);
+
+            var typeConverterException = TypeConverterException.Create<byte?, bool>(null);
+            throw typeConverterException;
+        }
+
         private static DateTime? ConvertStringToNullableDateTime(string str, TypeConverterContext context)
         {
             if (String.IsNullOrWhiteSpace(str))
@@ -383,6 +392,8 @@ namespace JsonApiFramework.Converters
                 new TypeConverterDefinitionFunc<byte, bool>((s, c) => System.Convert.ToBoolean(s)),
                 new TypeConverterDefinitionFunc<byte, bool?>((s, c) => System.Convert.ToBoolean(s)),
                 new TypeConverterDefinitionFunc<byte, string>((s, c) => System.Convert.ToString(s, c.SafeGetFormatProvider())),
+                new TypeConverterDefinitionFunc<byte?, bool>(ConvertNullableByteToBool),
+                new TypeConverterDefinitionFunc<byte?, string>((s, c) => s.HasValue ? System.Convert.ToString(s.Value) : null),
                 new TypeConverterDefinitionFunc<byte[], Guid>((s, c) => new Guid(s)),
                 new TypeConverterDefinitionFunc<byte[], Guid?>((s, c) => s != null ? new Guid(s) : new Guid?()),
                 new TypeConverterDefinitionFunc<byte[], string>((s, c) => s != null ? System.Convert.ToBase64String(s) : null),

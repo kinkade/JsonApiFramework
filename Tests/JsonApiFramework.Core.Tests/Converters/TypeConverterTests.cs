@@ -165,6 +165,95 @@ namespace JsonApiFramework.Tests.Converters
             {
                 // Simple Types /////////////////////////////////////////////
 
+                // Nullable Types ///////////////////////////////////////////
+
+                #region Nullable<Byte>ToXXX
+                new object []
+                {
+                    "Nullable<Byte>ToXXX - Generic",
+                    new object []
+                        {
+                            // Simple Types
+                            new TryConvertGenericTest<byte?, bool>("Nullable<Byte>ToBool", null, ConvertResult.Failure, default(bool)),
+                            new TryConvertGenericTest<byte?, bool>("Nullable<Byte>ToBool", 42, ConvertResult.Success, true),
+                            new TryConvertGenericTest<byte?, byte>("Nullable<Byte>ToByte", null, ConvertResult.Failure, default(byte)),
+                            new TryConvertGenericTest<byte?, byte>("Nullable<Byte>ToByte", 42, ConvertResult.Success, 42),
+                            new TryConvertGenericTest<byte?, byte[]>("Nullable<Byte>ToByteArray", null, ConvertResult.Failure, default(byte[])),
+                            new TryConvertGenericTest<byte?, byte[]>("Nullable<Byte>ToByteArray", 42, ConvertResult.Failure, default(byte[])),
+                            new TryConvertGenericTest<byte?, char>("Nullable<Byte>ToChar", null, ConvertResult.Failure, default(char)),
+                            new TryConvertGenericTest<byte?, char>("Nullable<Byte>ToChar", 42, ConvertResult.Success, '*'),
+                            new TryConvertGenericTest<byte?, DateTime>("Nullable<Byte>ToDateTime", null, ConvertResult.Failure, default(DateTime)),
+                            new TryConvertGenericTest<byte?, DateTime>("Nullable<Byte>ToDateTime", 42, ConvertResult.Failure, default(DateTime)),
+                            new TryConvertGenericTest<byte?, DateTimeOffset>("Nullable<Byte>ToDateTimeOffset", null, ConvertResult.Failure, default(DateTimeOffset)),
+                            new TryConvertGenericTest<byte?, DateTimeOffset>("Nullable<Byte>ToDateTimeOffset", 42, ConvertResult.Failure, default(DateTimeOffset)),
+                            new TryConvertGenericTest<byte?, decimal>("Nullable<Byte>ToDecimal", null, ConvertResult.Failure, default(decimal)),
+                            new TryConvertGenericTest<byte?, decimal>("Nullable<Byte>ToDecimal", 42, ConvertResult.Success, 42),
+                            new TryConvertGenericTest<byte?, double>("Nullable<Byte>ToDouble", null, ConvertResult.Failure, default(double)),
+                            new TryConvertGenericTest<byte?, double>("Nullable<Byte>ToDouble", 42, ConvertResult.Success, 42),
+                            new TryConvertGenericTest<byte?, PrimaryColor>("Nullable<Byte>ToEnum", null, ConvertResult.Failure, default(PrimaryColor)),
+                            new TryConvertGenericTest<byte?, PrimaryColor>("Nullable<Byte>ToEnum", 42, ConvertResult.Success, PrimaryColor.Blue),
+                            new TryConvertGenericTest<byte?, float>("Nullable<Byte>ToFloat", null, ConvertResult.Failure, default(float)),
+                            new TryConvertGenericTest<byte?, float>("Nullable<Byte>ToFloat", 42, ConvertResult.Success, 42),
+                            new TryConvertGenericTest<byte?, Guid>("Nullable<Byte>ToGuid", null, ConvertResult.Failure, default(Guid)),
+                            new TryConvertGenericTest<byte?, Guid>("Nullable<Byte>ToGuid", 42, ConvertResult.Failure, default(Guid)),
+                            new TryConvertGenericTest<byte?, int>("Nullable<Byte>ToInt", null, ConvertResult.Failure, default(int)),
+                            new TryConvertGenericTest<byte?, int>("Nullable<Byte>ToInt", 42, ConvertResult.Success, 42),
+                            new TryConvertGenericTest<byte?, long>("Nullable<Byte>ToLong", null, ConvertResult.Failure, default(long)),
+                            new TryConvertGenericTest<byte?, long>("Nullable<Byte>ToLong", 42, ConvertResult.Success, 42),
+                            new TryConvertGenericTest<byte?, sbyte>("Nullable<Byte>ToSByte", null, ConvertResult.Failure, default(sbyte)),
+                            new TryConvertGenericTest<byte?, sbyte>("Nullable<Byte>ToSByte", 42, ConvertResult.Success, 42),
+                            new TryConvertGenericTest<byte?, short>("Nullable<Byte>ToShort", null, ConvertResult.Failure, default(short)),
+                            new TryConvertGenericTest<byte?, short>("Nullable<Byte>ToShort", 42, ConvertResult.Success, 42),
+                            new TryConvertGenericTest<byte?, string>("Nullable<Byte>ToString", null, ConvertResult.Success, null),
+                            new TryConvertGenericTest<byte?, string>("Nullable<Byte>ToString", 42, ConvertResult.Success, "42"),
+                            new TryConvertGenericTest<byte?, TimeSpan>("Nullable<Byte>ToTimeSpan", null, ConvertResult.Failure, default(TimeSpan)),
+                            new TryConvertGenericTest<byte?, TimeSpan>("Nullable<Byte>ToTimeSpan", 42, ConvertResult.Failure, default(TimeSpan)),
+                            new TryConvertGenericTest<byte?, Type>("Nullable<Byte>ToType", null, ConvertResult.Failure, default(Type)),
+                            new TryConvertGenericTest<byte?, Type>("Nullable<Byte>ToType", 42, ConvertResult.Failure, default(Type)),
+                            new TryConvertGenericTest<byte?, uint>("Nullable<Byte>ToUInt", null, ConvertResult.Failure, default(uint)),
+                            new TryConvertGenericTest<byte?, uint>("Nullable<Byte>ToUInt", 42, ConvertResult.Success, 42),
+                            new TryConvertGenericTest<byte?, ulong>("Nullable<Byte>ToULong", null, ConvertResult.Failure, default(ulong)),
+                            new TryConvertGenericTest<byte?, ulong>("Nullable<Byte>ToULong", 42, ConvertResult.Success, 42),
+                            new TryConvertGenericTest<byte?, ushort>("Nullable<Byte>ToUShort", null, ConvertResult.Failure, default(ushort)),
+                            new TryConvertGenericTest<byte?, ushort>("Nullable<Byte>ToUShort", 42, ConvertResult.Success, 42),
+                            new TryConvertGenericTest<byte?, Uri>("Nullable<Byte>ToUri", null, ConvertResult.Failure, default(Uri)),
+                            new TryConvertGenericTest<byte?, Uri>("Nullable<Byte>ToUri", 42, ConvertResult.Failure, default(Uri)),
+
+                            // Nullable Types
+                            //new TryConvertGenericTest<byte?, bool?>("Nullable<Byte>ToNullable<Bool>", 42, ConvertResult.Success, true),
+                            //new TryConvertGenericTest<byte?, byte?>("Nullable<Byte>ToNullable<Byte>", 42, ConvertResult.Success, 42),
+                            //new TryConvertGenericTest<byte?, char?>("Nullable<Byte>ToNullable<Char>", 42, ConvertResult.Success, '*'),
+                            //new TryConvertGenericTest<byte?, DateTime?>("Nullable<Byte>ToNullable<DateTime>", 42, ConvertResult.Failure, default(DateTime?)),
+                            //new TryConvertGenericTest<byte?, DateTimeOffset?>("Nullable<Byte>ToNullable<DateTimeOffset>", 42, ConvertResult.Failure, default(DateTimeOffset?)),
+                            //new TryConvertGenericTest<byte?, decimal?>("Nullable<Byte>ToNullable<Decimal>", 42, ConvertResult.Success, 42),
+                            //new TryConvertGenericTest<byte?, double?>("Nullable<Byte>ToNullable<Double>", 42, ConvertResult.Success, 42),
+                            //new TryConvertGenericTest<byte?, PrimaryColor?>("Nullable<Byte>ToNullable<Enum>", 42, ConvertResult.Success, PrimaryColor.Blue),
+                            //new TryConvertGenericTest<byte?, float?>("Nullable<Byte>ToNullable<Float>", 42, ConvertResult.Success, 42),
+                            //new TryConvertGenericTest<byte?, Guid?>("Nullable<Byte>ToNullable<Guid>", 42, ConvertResult.Failure, default(Guid?)),
+                            //new TryConvertGenericTest<byte?, int?>("Nullable<Byte>ToNullable<Int>", 42, ConvertResult.Success, 42),
+                            //new TryConvertGenericTest<byte?, long?>("Nullable<Byte>ToNullable<Long>", 42, ConvertResult.Success, 42),
+                            //new TryConvertGenericTest<byte?, sbyte?>("Nullable<Byte>ToNullable<SByte>", 42, ConvertResult.Success, 42),
+                            //new TryConvertGenericTest<byte?, short?>("Nullable<Byte>ToNullable<Short>", 42, ConvertResult.Success, 42),
+                            //new TryConvertGenericTest<byte?, TimeSpan?>("Nullable<Byte>ToNullable<TimeSpan>", 42, ConvertResult.Failure, default(TimeSpan?)),
+                            //new TryConvertGenericTest<byte?, uint?>("Nullable<Byte>ToNullable<UInt>", 42, ConvertResult.Success, 42),
+                            //new TryConvertGenericTest<byte?, ulong?>("Nullable<Byte>ToNullable<ULong>", 42, ConvertResult.Success, 42),
+                            //new TryConvertGenericTest<byte?, ushort?>("Nullable<Byte>ToNullable<UShort>", 42, ConvertResult.Success, 42),
+
+                            // Interface/Class Types
+                            //new TryConvertGenericTest<byte?, IInterface>("Nullable<Byte>ToInterface", 42, ConvertResult.Failure, default(IInterface)),
+                            //new TryConvertGenericTest<byte?, BaseClass>("Nullable<Byte>ToBaseClass", 42, ConvertResult.Failure, default(BaseClass)),
+                            //new TryConvertGenericTest<byte?, DerivedClass>("Nullable<Byte>ToDerivedClass", 42, ConvertResult.Failure, default(DerivedClass)),
+                        }
+                },
+                #endregion
+
+                // Interface/Class Types ////////////////////////////////////
+            };
+
+        public static readonly IEnumerable<object[]> TryConvertGenericTestData2 = new[]
+            {
+                // Simple Types /////////////////////////////////////////////
+
                 #region BoolToXXX
                 new object []
                 {
@@ -1488,6 +1577,67 @@ namespace JsonApiFramework.Tests.Converters
                 #endregion
 
                 // Nullable Types ///////////////////////////////////////////
+                #region Nullable<Byte>ToXXX
+                new object []
+                {
+                    "Nullable<Byte>ToXXX - Generic",
+                    new object []
+                        {
+                            // Simple Types
+                            new TryConvertGenericTest<byte?, bool>("Nullable<Byte>ToBool", null, ConvertResult.Failure, default(bool)),
+                            new TryConvertGenericTest<byte?, bool>("Nullable<Byte>ToBool", 42, ConvertResult.Success, true),
+
+                            new TryConvertGenericTest<byte?, byte>("Nullable<Byte>ToByte", null, ConvertResult.Failure, default(byte)),
+                            new TryConvertGenericTest<byte?, byte>("Nullable<Byte>ToByte", 42, ConvertResult.Success, 42),
+
+                            //new TryConvertGenericTest<byte?, byte[]>("Nullable<Byte>ToByteArray", 42, ConvertResult.Failure, default(byte[])),
+                            //new TryConvertGenericTest<byte?, char>("Nullable<Byte>ToChar", 42, ConvertResult.Success, '*'),
+                            //new TryConvertGenericTest<byte?, DateTime>("Nullable<Byte>ToDateTime", 42, ConvertResult.Failure, default(DateTime)),
+                            //new TryConvertGenericTest<byte?, DateTimeOffset>("Nullable<Byte>ToDateTimeOffset", 42, ConvertResult.Failure, default(DateTimeOffset)),
+                            //new TryConvertGenericTest<byte?, decimal>("Nullable<Byte>ToDecimal", 42, ConvertResult.Success, 42),
+                            //new TryConvertGenericTest<byte?, double>("Nullable<Byte>ToDouble", 42, ConvertResult.Success, 42),
+                            //new TryConvertGenericTest<byte?, PrimaryColor>("Nullable<Byte>ToEnum", 42, ConvertResult.Success, PrimaryColor.Blue),
+                            //new TryConvertGenericTest<byte?, float>("Nullable<Byte>ToFloat", 42, ConvertResult.Success, 42),
+                            //new TryConvertGenericTest<byte?, Guid>("Nullable<Byte>ToGuid", 42, ConvertResult.Failure, default(Guid)),
+                            //new TryConvertGenericTest<byte?, int>("Nullable<Byte>ToInt", 42, ConvertResult.Success, 42),
+                            //new TryConvertGenericTest<byte?, long>("Nullable<Byte>ToLong", 42, ConvertResult.Success, 42),
+                            //new TryConvertGenericTest<byte?, sbyte>("Nullable<Byte>ToSByte", 42, ConvertResult.Success, 42),
+                            //new TryConvertGenericTest<byte?, short>("Nullable<Byte>ToShort", 42, ConvertResult.Success, 42),
+                            //new TryConvertGenericTest<byte?, string>("Nullable<Byte>ToString", 42, ConvertResult.Success, "42"),
+                            //new TryConvertGenericTest<byte?, TimeSpan>("Nullable<Byte>ToTimeSpan", 42, ConvertResult.Failure, default(TimeSpan)),
+                            //new TryConvertGenericTest<byte?, Type>("Nullable<Byte>ToType", 42, ConvertResult.Failure, default(Type)),
+                            //new TryConvertGenericTest<byte?, uint>("Nullable<Byte>ToUInt", 42, ConvertResult.Success, 42),
+                            //new TryConvertGenericTest<byte?, ulong>("Nullable<Byte>ToULong", 42, ConvertResult.Success, 42),
+                            //new TryConvertGenericTest<byte?, ushort>("Nullable<Byte>ToUShort", 42, ConvertResult.Success, 42),
+                            //new TryConvertGenericTest<byte?, Uri>("Nullable<Byte>ToUri", 42, ConvertResult.Failure, default(Uri)),
+
+                            // Nullable Types
+                            //new TryConvertGenericTest<byte?, bool?>("Nullable<Byte>ToNullable<Bool>", 42, ConvertResult.Success, true),
+                            //new TryConvertGenericTest<byte?, byte?>("Nullable<Byte>ToNullable<Byte>", 42, ConvertResult.Success, 42),
+                            //new TryConvertGenericTest<byte?, char?>("Nullable<Byte>ToNullable<Char>", 42, ConvertResult.Success, '*'),
+                            //new TryConvertGenericTest<byte?, DateTime?>("Nullable<Byte>ToNullable<DateTime>", 42, ConvertResult.Failure, default(DateTime?)),
+                            //new TryConvertGenericTest<byte?, DateTimeOffset?>("Nullable<Byte>ToNullable<DateTimeOffset>", 42, ConvertResult.Failure, default(DateTimeOffset?)),
+                            //new TryConvertGenericTest<byte?, decimal?>("Nullable<Byte>ToNullable<Decimal>", 42, ConvertResult.Success, 42),
+                            //new TryConvertGenericTest<byte?, double?>("Nullable<Byte>ToNullable<Double>", 42, ConvertResult.Success, 42),
+                            //new TryConvertGenericTest<byte?, PrimaryColor?>("Nullable<Byte>ToNullable<Enum>", 42, ConvertResult.Success, PrimaryColor.Blue),
+                            //new TryConvertGenericTest<byte?, float?>("Nullable<Byte>ToNullable<Float>", 42, ConvertResult.Success, 42),
+                            //new TryConvertGenericTest<byte?, Guid?>("Nullable<Byte>ToNullable<Guid>", 42, ConvertResult.Failure, default(Guid?)),
+                            //new TryConvertGenericTest<byte?, int?>("Nullable<Byte>ToNullable<Int>", 42, ConvertResult.Success, 42),
+                            //new TryConvertGenericTest<byte?, long?>("Nullable<Byte>ToNullable<Long>", 42, ConvertResult.Success, 42),
+                            //new TryConvertGenericTest<byte?, sbyte?>("Nullable<Byte>ToNullable<SByte>", 42, ConvertResult.Success, 42),
+                            //new TryConvertGenericTest<byte?, short?>("Nullable<Byte>ToNullable<Short>", 42, ConvertResult.Success, 42),
+                            //new TryConvertGenericTest<byte?, TimeSpan?>("Nullable<Byte>ToNullable<TimeSpan>", 42, ConvertResult.Failure, default(TimeSpan?)),
+                            //new TryConvertGenericTest<byte?, uint?>("Nullable<Byte>ToNullable<UInt>", 42, ConvertResult.Success, 42),
+                            //new TryConvertGenericTest<byte?, ulong?>("Nullable<Byte>ToNullable<ULong>", 42, ConvertResult.Success, 42),
+                            //new TryConvertGenericTest<byte?, ushort?>("Nullable<Byte>ToNullable<UShort>", 42, ConvertResult.Success, 42),
+
+                            // Interface/Class Types
+                            //new TryConvertGenericTest<byte?, IInterface>("Nullable<Byte>ToInterface", 42, ConvertResult.Failure, default(IInterface)),
+                            //new TryConvertGenericTest<byte?, BaseClass>("Nullable<Byte>ToBaseClass", 42, ConvertResult.Failure, default(BaseClass)),
+                            //new TryConvertGenericTest<byte?, DerivedClass>("Nullable<Byte>ToDerivedClass", 42, ConvertResult.Failure, default(DerivedClass)),
+                        }
+                },
+                #endregion
 
                 // Interface/Class Types ////////////////////////////////////
             };
@@ -1520,12 +1670,16 @@ namespace JsonApiFramework.Tests.Converters
             {
                 this.TypeConverter = new TypeConverter();
 
-                this.WriteLine("Source:    {0} ({1})", this.Source, typeof(TSource).Name);
+                var sourceAsString = ValueAsString(this.Source);
+
+                this.WriteLine("Source:    {0} ({1})", sourceAsString, typeof(TSource).Name);
                 this.WriteLine();
+
+                var expectedValueAsString = ValueAsString(this.ExpectedValue);
 
                 this.WriteLine("Expected");
                 this.WriteLine("  Result:  {0}", this.ExpectedResult);
-                this.WriteLine("  Value:   {0} ({1})", this.ExpectedValue, typeof(TTarget).Name);
+                this.WriteLine("  Value:   {0} ({1})", expectedValueAsString, typeof(TTarget).Name);
                 this.WriteLine();
             }
 
@@ -1539,18 +1693,46 @@ namespace JsonApiFramework.Tests.Converters
                 this.ActualResult = actualResult ? ConvertResult.Success : ConvertResult.Failure;
                 this.ActualValue = actualValue;
 
+                var actualValueAsString = ValueAsString(this.ActualValue);
+
                 this.WriteLine("Actual");
                 this.WriteLine("  Result:  {0}", this.ActualResult);
-                this.WriteLine("  Value:   {0} ({1})", this.ActualValue, typeof(TTarget).Name);
+                this.WriteLine("  Value:   {0} ({1})", actualValueAsString, typeof(TTarget).Name);
             }
 
             protected override void Assert()
             {
                 this.ActualResult.Should().Be(this.ExpectedResult);
+
                 switch (this.ActualResult)
                 {
                     case ConvertResult.Success:
                         {
+                            // Special case if source type is nullable.
+                            if (typeof(TSource).IsNullableType())
+                            {
+                                // Determine if nullable has a value or not.
+                                var hasValue = GetNullableHasValue(this.Source);
+                                if (hasValue)
+                                {
+                                    this.ActualValue.Should().BeOfType<TTarget>();
+                                    this.ActualValue.Should().Be(this.ExpectedValue);
+                                }
+                                else
+                                {
+                                    if (typeof(TTarget).IsClass())
+                                    {
+                                        this.ActualValue.Should().BeNull();                                        
+                                    }
+                                    else
+                                    {
+                                        this.ActualValue.Should().BeOfType<TTarget>();
+                                        this.ActualValue.Should().Be(default(TTarget));
+                                    }
+                                }
+                                return;
+                            }
+
                             // Special case if target type is nullable.
                             if (typeof(TTarget).IsNullableType())
                             {
@@ -1632,6 +1814,20 @@ namespace JsonApiFramework.Tests.Converters
                 var labmda = lambdaExpression.Compile();
                 var hasValue = labmda(nullable);
                 return hasValue;
+            }
+
+            private static string ValueAsString<TValue>(TValue value)
+            {
+                var valueAsString = value.SafeToString();
+                var valueType = typeof(TValue);
+
+                if (!valueType.IsNullableType() && valueType.IsValueType())
+                    return valueAsString;
+
+                var valueAsObject = (object)value;
+                if (valueAsObject == null)
+                    valueAsString = "null";
+                return valueAsString;
             }
             #endregion
         }
