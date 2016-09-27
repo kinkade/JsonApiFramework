@@ -49,7 +49,7 @@ namespace JsonApiFramework.Converters
                 return target;
 
             // Try direct cast.
-            if (TryConvertByCastStrict(source, context, out target))
+            if (TryConvertByCastStrict(source, out target))
                 return target;
 
             // Unable to convert between source and target types.
@@ -65,11 +65,6 @@ namespace JsonApiFramework.Converters
 
         // PRIVATE METHODS //////////////////////////////////////////////////
         #region Convert Implementation Methods
-        private static TTarget Cast<TSource, TTarget>(TSource source)
-        {
-            return CastTo<TTarget>.From(source);
-        }
-
         private TTarget ConvertToEnum<TSource, TTarget>(TSource source, TypeConverterContext context)
         {
             // Handle when source type can be converted to an integer.
@@ -77,16 +72,17 @@ namespace JsonApiFramework.Converters
             if (this.TryConvert(source, context, out sourceAsInt))
             {
                 // Casting from an integer to an enumeration always works.
-                return CastTo<TTarget>.From(sourceAsInt);
+                var target = Functions.Cast<int, TTarget>(sourceAsInt);
+                return target;
             }
 
             // Handle when source type is a string.
             if (typeof(TSource).IsString())
             {
-                var sourceAsString = CastTo<string>.From(source);
+                var sourceAsString = Functions.Cast<TSource, string>(source);
 
                 TTarget target;
-                if (EnumTryParse<TTarget>.From(sourceAsString, out target))
+                if (Functions.EnumTryParse(sourceAsString, out target))
                     return target;
             }
 
@@ -99,10 +95,10 @@ namespace JsonApiFramework.Converters
         {
             // Handle when source type is a string and null or empty.
             var isSourceString = typeof(TSource).IsString();
-            var sourceAsString = isSourceString ? CastTo<string>.From(source) : null;
+            var sourceAsString = isSourceString ? Functions.Cast<TSource, string>(source) : null;
             if (isSourceString && String.IsNullOrWhiteSpace(sourceAsString))
             {
-                return New<TTarget>.WithZeroArguments();
+                return Functions.NewWithZeroArguments<TTarget>();
             }
 
             // Handle when source type can be converted to an integer.
@@ -110,14 +106,15 @@ namespace JsonApiFramework.Converters
             if (this.TryConvert(source, context, out sourceAsInt))
             {
                 // Casting from an integer to an enumeration always works.
-                return CastTo<TTarget>.From(sourceAsInt);
+                var target = Functions.Cast<int, TTarget>(sourceAsInt);
+                return target;
             }
 
             // Handle when source type is a string.
             if (isSourceString)
             {
                 TTarget target;
-                if (TypeConverterNullableEnumTryParse<TTarget>.From(sourceAsString, out target))
+                if (Functions.NullableEnumTryParse(sourceAsString, out target))
                     return target;
             }
 
@@ -161,11 +158,11 @@ namespace JsonApiFramework.Converters
         /// <remarks>
         /// Strict means perform cast and let any exception be thrown.
         /// </remarks>
-        private static bool TryConvertByCastStrict<TSource, TTarget>(TSource source, TypeConverterContext context, out TTarget target)
+        private static bool TryConvertByCastStrict<TSource, TTarget>(TSource source, out TTarget target)
         {
             try
             {
-                target = Cast<TSource, TTarget>(source);
+                target = Functions.Cast<TSource, TTarget>(source);
                 return true;
             }
             catch (Exception exception)
@@ -211,8 +208,8 @@ namespace JsonApiFramework.Converters
             {
                 if (targetType.IsString())
                 {
-                    var targetAsString = EnumToString<TSource>.From(source, context);
-                    target = Cast<string, TTarget>(targetAsString);
+                    var targetAsString = Functions.EnumToString(source, context);
+                    target = Functions.Cast<string, TTarget>(targetAsString);
                     return true;
                 }
 
@@ -221,7 +218,7 @@ namespace JsonApiFramework.Converters
                     targetType == typeof(bool?) ||
                     targetType == typeof(decimal?))
                 {
-                    var sourceAsInteger = Cast<TSource, int>(source);
+                    var sourceAsInteger = Functions.Cast<TSource, int>(source);
                     target = this.Convert<int, TTarget>(sourceAsInteger);
                     return true;
                 }
@@ -359,7 +356,9 @@ namespace JsonApiFramework.Converters
         #endregion
 
         #region Enumeration Methods
+        // ReSharper disable UnusedMember.Local
         private static bool NullableEnumTryParse<T>(string value, bool ignoreCase, out T? result)
+        // ReSharper restore UnusedMember.Local
             where T : struct
         {
             T enumeration;
@@ -465,144 +464,75 @@ namespace JsonApiFramework.Converters
                 new TypeConverterDefinitionFunc<ushort, bool>((s, c) => System.Convert.ToBoolean(s)),
                 new TypeConverterDefinitionFunc<ushort, bool?>((s, c) => System.Convert.ToBoolean(s)),
                 new TypeConverterDefinitionFunc<ushort, string>((s, c) => System.Convert.ToString(s, c.SafeGetFormatProvider())),
-                new TypeConverterDefinitionFunc<Uri, string>((s, c) => s != null ? s.ToString() : null),
+                new TypeConverterDefinitionFunc<Uri, string>((s, c) => s != null ? s.ToString() : null)
             };
         #endregion
 
         // PRIVATE TYPES ////////////////////////////////////////////////////
         #region Types
         /// <summary>
-        /// Returns dynamically built lambdas (cached) to cast between types.
+        /// Delegate to match the signature of many "TryParse" like functions
+        /// to build dynamic lambdas from.
         /// </summary>
         /// <notes>
-        /// Avoids unnecessary boxing/unboxing for value types.
+        /// Needed to handle the "out" parameter correctly.
         /// </notes>
-        private static class CastTo<TTarget>
-        {
-            // PUBLIC METHODS ///////////////////////////////////////////////
-            #region Methods
-            public static TTarget From<TSource>(TSource source)
-            {
-                return Cache<TSource>.CastImpl(source);
-            }
-            #endregion
-
-            // PRIVATE TYPES ////////////////////////////////////////////////////
-            #region Types
-            private static class Cache<TSource>
-            {
-                #region Public Properties
-                public static Func<TSource, TTarget> CastImpl { get { return _castImpl.Value; } }
-                #endregion
-
-                #region Private Methods
-                private static Func<TSource, TTarget> CreateCastImpl()
-                {
-                    var parameterExpression = Expression.Parameter(typeof(TSource));
-                    var convertExpression = Expression.Convert(parameterExpression, typeof(TTarget));
-                    var convertLambda = Expression
-                        .Lambda<Func<TSource, TTarget>>(convertExpression, parameterExpression)
-                        .Compile();
-                    return convertLambda;
-                }
-                #endregion
-
-                #region Private Fields
-                // ReSharper disable InconsistentNaming
-                private static readonly Lazy<Func<TSource, TTarget>> _castImpl = new Lazy<Func<TSource, TTarget>>(CreateCastImpl, LazyThreadSafetyMode.PublicationOnly);
-                // ReSharper restore InconsistentNaming
-                #endregion
-            }
-            #endregion
-        }
-
+        private delegate bool TryParseDelegate<TTarget>(string source, out TTarget target);
+        
         /// <summary>
-        /// Returns dynamically built lambdas (cached) to call the ToString
-        /// instance method on the source object when TSource is an enumeration.
+        /// Returns dynamically built lambdas (cached) to perform various
+        /// conversion functions.
         /// </summary>
-        private static class EnumToString<TSource>
+        /// <notes>
+        /// Design goals include:
+        /// - Avoid unnecessary boxing/unboxing for value types.
+        /// - Use reflection only once upon startup only if needed.
+        /// </notes>
+        private static class Functions
         {
             // PUBLIC METHODS ///////////////////////////////////////////////
             #region Methods
-            public static string From(TSource source, TypeConverterContext context)
+            public static TTarget Cast<TSource, TTarget>(TSource source)
+            {
+                var target = Cache<TSource, TTarget>.Cast(source);
+                return target;
+            }
+
+            public static string EnumToString<TSource>(TSource source, TypeConverterContext context)
             {
                 var format = context.SafeGetFormat();
-                return String.IsNullOrWhiteSpace(format)
-                    ? Cache.ToStringImpl(source)
-                    : Cache.ToStringWithFormatImpl(source, format);
+                var target = String.IsNullOrWhiteSpace(format)
+                    ? Cache<TSource>.EnumToString(source)
+                    : Cache<TSource>.EnumToStringWithFormat(source, format);
+                return target;
             }
-            #endregion
 
-            // PRIVATE TYPES ////////////////////////////////////////////////////
-            #region Types
-            private static class Cache
-            {
-                #region Public Properties
-                // ReSharper disable StaticFieldInGenericType
-                public static Func<TSource, string> ToStringImpl { get { return _toStringImpl.Value; } }
-                public static Func<TSource, string, string> ToStringWithFormatImpl { get { return _toStringWithFormatImpl.Value; } }
-                // ReSharper restore StaticFieldInGenericType
-                #endregion
-
-                #region Private Methods
-                private static Func<TSource, string> CreateToStringImpl()
-                {
-                    var enumType = typeof(Enum);
-                    var toStringMethod = enumType
-                        .GetMethod("ToString", BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.Instance);
-
-                    var sourceType = typeof(TSource);
-                    var sourceExpression = Expression.Parameter(sourceType, "source");
-                    var callExpression = Expression.Call(sourceExpression, toStringMethod);
-                    var callLambdaExpression = Expression.Lambda<Func<TSource, string>>(callExpression, sourceExpression);
-                    var callLambda = callLambdaExpression.Compile();
-                    return callLambda;
-                }
-
-                private static Func<TSource, string, string> CreateToStringWithFormatImpl()
-                {
-                    var enumType = typeof(Enum);
-                    var toStringWithFormatMethod = enumType
-                        .GetMethod("ToString", BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.Instance, typeof(string));
-
-                    var sourceType = typeof(TSource);
-                    var sourceExpression = Expression.Parameter(sourceType, "source");
-                    var formatExpression = Expression.Parameter(typeof(string), "format");
-                    // ReSharper disable PossiblyMistakenUseOfParamsMethod
-                    var callExpression = Expression.Call(sourceExpression, toStringWithFormatMethod, formatExpression);
-                    // ReSharper restore PossiblyMistakenUseOfParamsMethod
-                    var callLambdaExpression = Expression.Lambda<Func<TSource, string, string>>(callExpression, sourceExpression, formatExpression);
-                    var callLambda = callLambdaExpression.Compile();
-                    return callLambda;
-                }
-                #endregion
-
-                #region Private Fields
-                // ReSharper disable InconsistentNaming
-                // ReSharper disable StaticFieldInGenericType
-                private static readonly Lazy<Func<TSource, string>> _toStringImpl = new Lazy<Func<TSource, string>>(CreateToStringImpl, LazyThreadSafetyMode.PublicationOnly);
-                private static readonly Lazy<Func<TSource, string, string>> _toStringWithFormatImpl = new Lazy<Func<TSource, string, string>>(CreateToStringWithFormatImpl, LazyThreadSafetyMode.PublicationOnly);
-                // ReSharper restore StaticFieldInGenericType
-                // ReSharper restore InconsistentNaming
-                #endregion
-            }
-            #endregion
-        }
-
-        private delegate bool EnumTryParseDelegate<TTarget>(string source, out TTarget target);
-
-        /// <summary>
-        /// Returns dynamically built lambdas (cached) to call Enum.TryParse static method.
-        /// </summary>
-        private static class EnumTryParse<TTarget>
-        {
-            // PUBLIC METHODS ///////////////////////////////////////////////
-            #region Methods
-            public static bool From(string source, out TTarget target)
+            public static bool EnumTryParse<TTarget>(string source, out TTarget target)
             {
                 try
                 {
-                    return Cache.EnumTryParseImpl(source, out target);
+                    var result = Cache<TTarget>.EnumTryParse(source, out target);
+                    return result;
+                }
+                catch (Exception)
+                {
+                    target = default(TTarget);
+                    return false;
+                }
+            }
+
+            public static TTarget NewWithZeroArguments<TTarget>()
+            {
+                var target = Cache<TTarget>.NewWithZeroArguments();
+                return target;
+            }
+
+            public static bool NullableEnumTryParse<TTarget>(string source, out TTarget target)
+            {
+                try
+                {
+                    var result = Cache<TTarget>.NullableEnumTryParse(source, out target);
+                    return result;
                 }
                 catch (Exception)
                 {
@@ -612,21 +542,60 @@ namespace JsonApiFramework.Converters
             }
             #endregion
 
-            // PRIVATE TYPES ////////////////////////////////////////////////////
+            // PRIVATE TYPES ////////////////////////////////////////////////
             #region Types
-            private static class Cache
+            private static class Cache<T>
             {
-                #region Public Properties
-                public static EnumTryParseDelegate<TTarget> EnumTryParseImpl { get { return _enumTryParseImpl.Value; } }
+                // PUBLIC PROPERTIES ////////////////////////////////////////////
+                #region Properties
+                public static Func<T, string> EnumToString { get { return _enumToString.Value; } }
+                public static Func<T, string, string> EnumToStringWithFormat { get { return _enumToStringWithFormat.Value; } }
+                public static TryParseDelegate<T> EnumTryParse { get { return _enumTryParse.Value; } }
+                public static Func<T> NewWithZeroArguments { get { return _newWithZeroArguments.Value; } }
+                public static TryParseDelegate<T> NullableEnumTryParse { get { return _nullableEnumTryParse.Value; } }
                 #endregion
 
-                #region Private Methods
-                private static EnumTryParseDelegate<TTarget> CreateEnumTryParseImpl()
+                // PRIVATE METHODS //////////////////////////////////////////////
+                #region Methods
+                private static Func<T, string> CreateEnumToString()
+                {
+                    var enumType = typeof(Enum);
+                    var toStringMethod = enumType
+                        .GetMethod("ToString", BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.Instance);
+
+                    var sourceType = typeof(T);
+                    var sourceExpression = Expression.Parameter(sourceType, "source");
+                    var callExpression = Expression.Call(sourceExpression, toStringMethod);
+                    var callLambdaExpression = Expression.Lambda<Func<T, string>>(callExpression, sourceExpression);
+                    var callLambda = callLambdaExpression.Compile();
+
+                    return callLambda;
+                }
+
+                private static Func<T, string, string> CreateEnumToStringWithFormat()
+                {
+                    var enumType = typeof(Enum);
+                    var toStringWithFormatMethod = enumType
+                        .GetMethod("ToString", BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.Instance, typeof(string));
+
+                    var sourceType = typeof(T);
+                    var sourceExpression = Expression.Parameter(sourceType, "source");
+                    var formatExpression = Expression.Parameter(typeof(string), "format");
+                    // ReSharper disable PossiblyMistakenUseOfParamsMethod
+                    var callExpression = Expression.Call(sourceExpression, toStringWithFormatMethod, formatExpression);
+                    // ReSharper restore PossiblyMistakenUseOfParamsMethod
+                    var callLambdaExpression = Expression.Lambda<Func<T, string, string>>(callExpression, sourceExpression, formatExpression);
+                    var callLambda = callLambdaExpression.Compile();
+
+                    return callLambda;
+                }
+
+                private static TryParseDelegate<T> CreateEnumTryParse()
                 {
                     // public static bool TryParse<TEnum>(string value, bool ignoreCase, out TEnum result) where TEnum : struct;
                     var enumType = typeof(Enum);
                     var tryParseMethodInfoOpen = enumType.GetMethods().Single(x => x.Name == "TryParse" && x.GetParameters().Count() == 3);
-                    var tryParseMethodInfoClosed = tryParseMethodInfoOpen.MakeGenericMethod(typeof(TTarget));
+                    var tryParseMethodInfoClosed = tryParseMethodInfoOpen.MakeGenericMethod(typeof(T));
 
                     var arguments = tryParseMethodInfoClosed.GetParameters();
                     var sourceType = arguments[0].ParameterType;
@@ -636,62 +605,28 @@ namespace JsonApiFramework.Converters
                     var ignoreCaseExpression = Expression.Constant(true, typeof(bool));
                     var resultExpression = Expression.Parameter(resultType, "result");
                     var callExpression = Expression.Call(tryParseMethodInfoClosed, sourceExpression, ignoreCaseExpression, resultExpression);
-                    var callDelegateExpression = Expression.Lambda<EnumTryParseDelegate<TTarget>>(callExpression, sourceExpression, resultExpression);
+                    var callDelegateExpression = Expression.Lambda<TryParseDelegate<T>>(callExpression, sourceExpression, resultExpression);
                     var callDelegate = callDelegateExpression.Compile();
 
                     return callDelegate;
                 }
-                #endregion
 
-                #region Private Fields
-                // ReSharper disable InconsistentNaming
-                // ReSharper disable StaticFieldInGenericType
-                private static readonly Lazy<EnumTryParseDelegate<TTarget>> _enumTryParseImpl = new Lazy<EnumTryParseDelegate<TTarget>>(CreateEnumTryParseImpl, LazyThreadSafetyMode.PublicationOnly);
-                // ReSharper restore StaticFieldInGenericType
-                // ReSharper restore InconsistentNaming
-                #endregion
-            }
-            #endregion
-        }
-
-        /// <summary>
-        /// Returns dynamically built lambdas (cached) to call TypeConverter.NullableEnumTryParse
-        /// static method.
-        /// </summary>
-        private static class TypeConverterNullableEnumTryParse<TTarget>
-        {
-            // PUBLIC METHODS ///////////////////////////////////////////////
-            #region Methods
-            public static bool From(string source, out TTarget target)
-            {
-                try
+                private static Func<T> CreateNewWithZeroArguments()
                 {
-                    return Cache.NullableEnumTryParseImpl(source, out target);
+                    var targetType = typeof(T);
+                    var newExpression = Expression.New(targetType);
+                    var newLambdaExpression = Expression.Lambda<Func<T>>(newExpression);
+                    var newLambda = newLambdaExpression.Compile();
+                    return newLambda;
                 }
-                catch (Exception)
-                {
-                    target = default(TTarget);
-                    return false;
-                }
-            }
-            #endregion
 
-            // PRIVATE TYPES ////////////////////////////////////////////////////
-            #region Types
-            private static class Cache
-            {
-                #region Public Properties
-                public static EnumTryParseDelegate<TTarget> NullableEnumTryParseImpl { get { return _nullableEnumTryParseImpl.Value; } }
-                #endregion
-
-                #region Private Methods
-                private static EnumTryParseDelegate<TTarget> CreateNullableEnumTryParseImpl()
+                private static TryParseDelegate<T> CreateNullableEnumTryParse()
                 {
                     // public static bool TryParse<TEnum>(string value, bool ignoreCase, out TEnum result) where TEnum : struct;
                     var typeConverterType = typeof(TypeConverter);
                     var tryParseMethodInfoOpen = typeConverterType.GetMethods(BindingFlags.NonPublic | BindingFlags.Static).Single(x => x.Name == "NullableEnumTryParse");
 
-                    var targetType = typeof(TTarget);
+                    var targetType = typeof(T);
                     var targetUnderlyingType = Nullable.GetUnderlyingType(targetType);
                     var tryParseMethodInfoClosed = tryParseMethodInfoOpen.MakeGenericMethod(targetUnderlyingType);
 
@@ -703,60 +638,49 @@ namespace JsonApiFramework.Converters
                     var ignoreCaseExpression = Expression.Constant(true, typeof(bool));
                     var resultExpression = Expression.Parameter(resultType, "result");
                     var callExpression = Expression.Call(tryParseMethodInfoClosed, sourceExpression, ignoreCaseExpression, resultExpression);
-                    var callDelegateExpression = Expression.Lambda<EnumTryParseDelegate<TTarget>>(callExpression, sourceExpression, resultExpression);
+                    var callDelegateExpression = Expression.Lambda<TryParseDelegate<T>>(callExpression, sourceExpression, resultExpression);
                     var callDelegate = callDelegateExpression.Compile();
 
                     return callDelegate;
                 }
                 #endregion
 
+                // PRIVATE FIELDS ///////////////////////////////////////////////
                 #region Private Fields
                 // ReSharper disable InconsistentNaming
-                // ReSharper disable StaticFieldInGenericType
-                private static readonly Lazy<EnumTryParseDelegate<TTarget>> _nullableEnumTryParseImpl = new Lazy<EnumTryParseDelegate<TTarget>>(CreateNullableEnumTryParseImpl, LazyThreadSafetyMode.PublicationOnly);
-                // ReSharper restore StaticFieldInGenericType
+                private static readonly Lazy<Func<T, string>> _enumToString = new Lazy<Func<T, string>>(CreateEnumToString, LazyThreadSafetyMode.PublicationOnly);
+                private static readonly Lazy<Func<T, string, string>> _enumToStringWithFormat = new Lazy<Func<T, string, string>>(CreateEnumToStringWithFormat, LazyThreadSafetyMode.PublicationOnly);
+                private static readonly Lazy<TryParseDelegate<T>> _enumTryParse = new Lazy<TryParseDelegate<T>>(CreateEnumTryParse, LazyThreadSafetyMode.PublicationOnly);
+                private static readonly Lazy<Func<T>> _newWithZeroArguments = new Lazy<Func<T>>(CreateNewWithZeroArguments, LazyThreadSafetyMode.PublicationOnly);
+                private static readonly Lazy<TryParseDelegate<T>> _nullableEnumTryParse = new Lazy<TryParseDelegate<T>>(CreateNullableEnumTryParse, LazyThreadSafetyMode.PublicationOnly);
                 // ReSharper restore InconsistentNaming
                 #endregion
             }
-            #endregion
-        }
 
-        /// <summary>
-        /// Returns dynamically built lambdas (cached) to call new TTarget()
-        /// </summary>
-        /// <typeparam name="TTarget"></typeparam>
-        private static class New<TTarget>
-        {
-            // PUBLIC METHODS ///////////////////////////////////////////////
-            #region Methods
-            public static TTarget WithZeroArguments()
-            { return Cache.NewWithZeroArgumentsImpl(); }
-            #endregion
-
-            // PRIVATE TYPES ////////////////////////////////////////////////////
-            #region Types
-            private static class Cache
+            private static class Cache<TSource, TTarget>
             {
-                #region Public Properties
-                public static Func<TTarget> NewWithZeroArgumentsImpl { get { return _newWithZeroArgumentsImpl.Value; } }
+                // PUBLIC PROPERTIES ////////////////////////////////////////////
+                #region Properties
+                public static Func<TSource, TTarget> Cast { get { return _castImpl.Value; } }
                 #endregion
 
-                #region Private Methods
-                private static Func<TTarget> CreateNewWithZeroArgumentsImpl()
+                // PRIVATE METHODS //////////////////////////////////////////////
+                #region Methods
+                private static Func<TSource, TTarget> CreateCastImpl()
                 {
-                    var targetType = typeof(TTarget);
-                    var newExpression = Expression.New(targetType);
-                    var newLambdaExpression = Expression.Lambda<Func<TTarget>>(newExpression);
-                    var newLambda = newLambdaExpression.Compile();
-                    return newLambda;
+                    var parameterExpression = Expression.Parameter(typeof(TSource));
+                    var convertExpression = Expression.Convert(parameterExpression, typeof(TTarget));
+                    var convertLambda = Expression
+                        .Lambda<Func<TSource, TTarget>>(convertExpression, parameterExpression)
+                        .Compile();
+                    return convertLambda;
                 }
                 #endregion
 
+                // PRIVATE FIELDS ///////////////////////////////////////////////
                 #region Private Fields
                 // ReSharper disable InconsistentNaming
-                // ReSharper disable StaticFieldInGenericType
-                private static readonly Lazy<Func<TTarget>> _newWithZeroArgumentsImpl = new Lazy<Func<TTarget>>(CreateNewWithZeroArgumentsImpl, LazyThreadSafetyMode.PublicationOnly);
-                // ReSharper restore StaticFieldInGenericType
+                private static readonly Lazy<Func<TSource, TTarget>> _castImpl = new Lazy<Func<TSource, TTarget>>(CreateCastImpl, LazyThreadSafetyMode.PublicationOnly);
                 // ReSharper restore InconsistentNaming
                 #endregion
             }
